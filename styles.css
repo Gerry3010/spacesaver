@@ -1,0 +1,189 @@
+:root {
+  --cyan: #7df5ff;
+  --gold: #ffd166;
+  --dim: rgba(180, 210, 230, 0.55);
+  --hud-font: "Rajdhani", "Segoe UI", "Ubuntu", system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.idle { cursor: none; }
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--hud-font);
+  color: var(--cyan);
+  user-select: none;
+  text-transform: uppercase;
+}
+
+/* ---- score (top left) ---- */
+#score-panel {
+  position: absolute;
+  top: 28px;
+  left: 36px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+body.playing #score-panel { opacity: 1; }
+
+#score {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 18px rgba(125, 245, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+#score.pop { animation: score-pop 0.25s ease; }
+@keyframes score-pop {
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+#combo {
+  min-height: 24px;
+  font-size: 20px;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#combo.on { opacity: 1; }
+
+/* ---- lives (top right) ---- */
+#lives {
+  position: absolute;
+  top: 34px;
+  right: 40px;
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+body.playing #lives { opacity: 1; }
+
+#lives .life {
+  width: 0;
+  height: 0;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-bottom: 20px solid var(--cyan);
+  filter: drop-shadow(0 0 8px rgba(125, 245, 255, 0.7));
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+#lives .life.lost {
+  opacity: 0.18;
+  filter: none;
+}
+
+/* ---- game over ---- */
+#gameover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(ellipse at center, rgba(4, 8, 20, 0.55), rgba(0, 0, 0, 0.15));
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s;
+}
+#gameover.on { opacity: 1; visibility: visible; }
+
+#gameover h1 {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-shadow: 0 0 30px rgba(125, 245, 255, 0.6);
+}
+#final-score { font-size: 30px; letter-spacing: 0.2em; }
+#best-score { font-size: 18px; letter-spacing: 0.2em; color: var(--gold); }
+#gameover .restart-hint {
+  margin-top: 26px;
+  font-size: 15px;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+  animation: hint-pulse 2.4s ease-in-out infinite;
+}
+
+/* ---- idle hint / watermark ---- */
+#hint {
+  position: absolute;
+  bottom: 8vh;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+#hint.on { opacity: 1; animation: hint-pulse 3s ease-in-out infinite; }
+#hint .gold { color: var(--gold); }
+#hint .gray { color: #aab; }
+@keyframes hint-pulse {
+  50% { opacity: 0.45; }
+}
+
+#watermark {
+  position: absolute;
+  bottom: 26px;
+  right: 36px;
+  font-size: 13px;
+  letter-spacing: 0.5em;
+  color: rgba(125, 245, 255, 0.28);
+  transition: opacity 0.6s ease;
+}
+body.playing #watermark { opacity: 0; }
+
+#debug {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font: 12px monospace;
+  text-transform: none;
+  color: #6f6;
+  display: none;
+}
+
+/* ---- fullscreen button ---- */
+#fs-btn {
+  position: fixed;
+  bottom: 22px;
+  left: 26px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(125, 245, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(6, 12, 26, 0.5);
+  color: var(--cyan);
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.4s ease, background 0.2s ease;
+}
+body:not(.idle) #fs-btn { opacity: 0.65; }
+#fs-btn:hover { background: rgba(125, 245, 255, 0.15); opacity: 1; }

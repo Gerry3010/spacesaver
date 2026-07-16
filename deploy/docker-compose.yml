@@ -1,0 +1,9 @@
+services:
+  spacesaver:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: spacesaver
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8123:80"

@@ -1,0 +1,19 @@
+{
+  "name": "spacesaver",
+  "version": "0.1.0",
+  "description": "Fancy 3D space screensaver that turns into an arcade game when you move the mouse",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "esbuild src/main.js --bundle --format=iife --target=es2020 --sourcemap --outfile=dist/bundle.js --servedir=. --watch=forever",
+    "build": "esbuild src/main.js --bundle --format=iife --target=es2020 --minify --outfile=dist/bundle.js",
+    "build:standalone": "npm run build && node scripts/build-standalone.mjs",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "three": "^0.178.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
