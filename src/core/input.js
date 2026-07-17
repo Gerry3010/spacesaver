@@ -28,6 +28,11 @@ export class Input {
     window.addEventListener('dragstart', (e) => e.preventDefault());
     window.addEventListener('selectstart', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // menu toggle — deliberately NOT activity (must not start the game)
+        this.onEscape?.();
+        return;
+      }
       if (e.key === 'f' || e.key === 'F') toggleFullscreen();
       this._forceActivity = true;
     });
@@ -57,7 +62,7 @@ export class Input {
   }
 }
 
-function toggleFullscreen() {
+export function toggleFullscreen() {
   if (document.fullscreenElement) {
     document.exitFullscreen();
   } else {

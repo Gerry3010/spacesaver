@@ -18,7 +18,9 @@ files), vanilla JS, bundled by esbuild.
   (localStorage) → back to the screensaver. Stop moving for ~6 s → the game
   fades back into the screensaver too.
 
-Keys: `F` = fullscreen. `?debug=1` = fps/draw-call overlay + `window.__spacesaver`
+Keys: `F` = fullscreen, `ESC` = pause menu (resume / restart / fullscreen /
+mode select — registered modes appear there automatically via `mode.label`;
+the game clock freezes while the menu is open). `?debug=1` = fps/draw-call overlay + `window.__spacesaver`
 handle. `?demo=coin-rush` = synthetic pilot (for headless screenshots/tuning —
 the mouse does nothing in demo mode).
 

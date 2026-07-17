@@ -22,6 +22,17 @@ export class ModeManager {
     this.current.enter(this.ctx);
   }
 
+  /** Re-enter the current mode (fresh run of the same game). */
+  restartCurrent() {
+    if (!this.current) return;
+    this.current.exit(this.ctx);
+    this.current.enter(this.ctx);
+  }
+
+  list() {
+    return [...this.modes.values()];
+  }
+
   update(dt) {
     if (this.current) this.current.update(dt, this.ctx);
   }

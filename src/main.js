@@ -3,6 +3,7 @@ import { Input } from './core/input.js';
 import { ModeManager } from './core/mode-manager.js';
 import { World } from './world/world.js';
 import { Hud } from './ui/hud.js';
+import { Menu } from './ui/menu.js';
 import { idleMode } from './modes/idle-mode.js';
 import { coinRushMode } from './modes/coin-rush-mode.js';
 
@@ -18,6 +19,35 @@ const modeManager = new ModeManager({ world, input, hud });
 modeManager.register(idleMode);
 modeManager.register(coinRushMode);
 modeManager.switchTo('idle');
+
+// ---- ESC / pause menu ----
+let paused = false;
+
+function setPaused(p) {
+  if (paused === p) return;
+  paused = p;
+  if (p) {
+    menu.show(modeManager.list(), modeManager.current.id);
+  } else {
+    menu.hide();
+    // don't let time spent in the menu count as idle time
+    input.lastActivity = world.time;
+  }
+}
+
+const menu = new Menu({
+  onResume: () => setPaused(false),
+  onRestart: () => {
+    modeManager.restartCurrent();
+    setPaused(false);
+  },
+  onSelectMode: (id) => {
+    modeManager.switchTo(id);
+    setPaused(false);
+  },
+});
+
+input.onEscape = () => setPaused(!paused);
 
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug');
@@ -37,8 +67,12 @@ engine.start((dt) => {
     input.lastActivity = world.time;
   }
   input.update(dt, world.time);
-  modeManager.update(dt);
-  world.update(dt);
+  if (paused) {
+    world.scenicUpdate(dt);
+  } else {
+    modeManager.update(dt);
+    world.update(dt);
+  }
 
   if (debug) {
     frames++;

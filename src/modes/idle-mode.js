@@ -5,6 +5,7 @@ import { CONFIG } from '../core/config.js';
 
 export const idleMode = {
   id: 'idle',
+  label: 'Screensaver',
   t: 0,
   enteredAt: 0,
 

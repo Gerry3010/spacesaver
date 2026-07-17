@@ -9,6 +9,7 @@ import { worldSpeed } from '../game/difficulty.js';
 
 export const coinRushMode = {
   id: 'coin-rush',
+  label: 'Coin Rush',
   coins: null,
   _aim: { x: 0, y: 0 },
 

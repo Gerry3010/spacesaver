@@ -54,7 +54,27 @@ export class World {
     return out;
   }
 
+  /**
+   * Reduced update while the pause menu is open: stars keep twinkling and
+   * existing trail particles fade out, but gameplay (ship steering targets,
+   * entities, spawning) is frozen.
+   */
+  scenicUpdate(dt) {
+    // world.time is frozen on purpose — game timers (combo, invulnerability,
+    // game-over countdown) must not tick while the menu is open. The shaders
+    // get their own clock so stars keep twinkling.
+    this._menuTime = (this._menuTime ?? this.time) + dt;
+    const t = this._menuTime;
+    const drift = this.speed * 0.12;
+    this.ship.update(dt, t);
+    this.starfield.update(dt, drift, t);
+    this.nebula.update(dt, drift, t);
+    this.trail.update(dt);
+    this.rig.update(dt, this.ship);
+  }
+
   update(dt) {
+    this._menuTime = null;
     this.time += dt;
     for (const u of this.updatables) u(dt, this.speed);
     this.ship.update(dt, this.time);
