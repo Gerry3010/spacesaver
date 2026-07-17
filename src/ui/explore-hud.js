@@ -211,20 +211,41 @@ export class ExploreHud {
       this._mapHits.push({ x: px, y: py, i });
     });
 
-    // ship marker + heading arrow
+    // ship marker: a glowing sci-fi dart at your position, nose pointing the way
+    // you're facing (heading). The shape reads as ">" — location + orientation.
     const [sx, sy] = this._worldToCanvas(this._ship.x, this._ship.z);
-    const fx = -Math.sin(this._ship.yaw);
+    const fx = -Math.sin(this._ship.yaw); // forward on the map
     const fz = -Math.cos(this._ship.yaw);
-    ctx.strokeStyle = '#ffd166';
-    ctx.fillStyle = '#ffd166';
-    ctx.lineWidth = 2;
+    const rx = -fz; // right-hand perpendicular
+    const rz = fx;
+    const pt = (fwd, side) => [sx + fx * fwd + rx * side, sy + fz * fwd + rz * side];
+
+    // faint "you are here" position halo
     ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + fx * 22, sy + fz * 22);
+    ctx.arc(sx, sy, 15, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 209, 102, 0.28)';
+    ctx.lineWidth = 1;
     ctx.stroke();
+
+    // the dart: nose ahead, swept-back wings, concave tail
+    const [nx, ny] = pt(13, 0);   // nose
+    const [lx, ly] = pt(-8, 8);   // left wingtip
+    const [tx, ty] = pt(-3, 0);   // tail notch (concave → arrowhead look)
+    const [wx, wy] = pt(-8, -8);  // right wingtip
     ctx.beginPath();
-    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+    ctx.moveTo(nx, ny);
+    ctx.lineTo(lx, ly);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo(wx, wy);
+    ctx.closePath();
+    ctx.fillStyle = '#ffd166';
+    ctx.shadowColor = '#ffd166';
+    ctx.shadowBlur = 12;
     ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255, 244, 214, 0.95)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
 
   _onMapClick(e) {

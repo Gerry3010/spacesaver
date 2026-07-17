@@ -115,7 +115,14 @@ const menu = new Menu({
   },
 });
 
-input.onEscape = () => setPaused(!paused);
+input.onEscape = () => {
+  // ESC first dismisses the Explore star map if it's open, before the menu
+  if (modeManager.current.id === 'explore' && exploreMode.hud?.mapOpen) {
+    exploreMode.hud.closeMap();
+    return;
+  }
+  setPaused(!paused);
+};
 
 // on-screen pause button (bottom-left) — same as pressing ESC
 document.getElementById('pause-btn')?.addEventListener('click', () => setPaused(!paused));
