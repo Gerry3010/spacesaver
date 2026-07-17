@@ -30,9 +30,10 @@ export const CONFIG = {
   spawnZ: -360,
   killZ: 25,
 
-  // pointer response: |n|^exponent — center precise, edges expansive;
+  // pointer response: |n|^exponent — Gerry-tuned to 0.8: sub-linear, i.e.
+  // reactive around the center, still exactly edge-to-edge at the borders.
   // overshoot lets the pointer pin the ship flush against the corridor edge
-  steering: { exponent: 1.6, overshoot: 1.04 },
+  steering: { exponent: 0.8, overshoot: 1.04 },
 
   idleSpeed: 70,
   shipScale: 0.72,
