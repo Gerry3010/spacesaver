@@ -23,7 +23,7 @@
     <div id="hint">move the mouse to take the stick &mdash; catch <span class="gold">coins</span>, dodge <span class="gray">asteroids</span></div>
     <div id="menu">
       <div id="menu-panel">
-        <h1>Pause</h1>
+        <h1 id="menu-title">Pause</h1>
         <div class="menu-buttons">
           <button id="menu-resume">Weiter</button>
           <button id="menu-restart">Neustart</button>
@@ -33,6 +33,17 @@
         <div class="menu-buttons" id="menu-modes"></div>
         <div class="menu-buttons" style="margin-top: 10px">
           <button id="menu-demo">Demo ansehen</button>
+        </div>
+        <div id="lb" hidden>
+          <h2>Bestenliste</h2>
+          <div id="lb-you"></div>
+          <div id="lb-list"></div>
+          <form id="lb-form" hidden>
+            <input id="lb-name" maxlength="20" placeholder="Dein Name" autocomplete="off">
+            <div id="lb-turnstile"></div>
+            <button type="submit">Eintragen</button>
+          </form>
+          <div id="lb-status"></div>
         </div>
         <div class="menu-hint">ESC schlie&szlig;t das Men&uuml;</div>
       </div>

@@ -7,3 +7,22 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8123:80"
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    container_name: spacesaver-api
+    restart: unless-stopped
+    environment:
+      # set these in deploy/.env on the server (gitignored)
+      JWT_SECRET: ${JWT_SECRET:?set in deploy/.env}
+      TURNSTILE_SITEKEY: ${TURNSTILE_SITEKEY:-}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+    volumes:
+      - leaderboard-data:/data
+
+volumes:
+  leaderboard-data:

@@ -5,6 +5,7 @@ import { SyncChannel } from './core/sync.js';
 import { World } from './world/world.js';
 import { Hud } from './ui/hud.js';
 import { Menu } from './ui/menu.js';
+import { Leaderboard } from './ui/leaderboard.js';
 import { CONFIG } from './core/config.js';
 import { idleMode } from './modes/idle-mode.js';
 import { coinRushMode } from './modes/coin-rush-mode.js';
@@ -32,10 +33,21 @@ if (view) {
 const input = new Input();
 const hud = new Hud();
 
-const modeManager = new ModeManager({ world, input, hud });
+const ctx = { world, input, hud };
+const modeManager = new ModeManager(ctx);
 modeManager.register(idleMode);
 modeManager.register(coinRushMode);
 modeManager.switchTo('idle');
+
+// leaderboard (?api= overrides for local dev, e.g. ?api=http://127.0.0.1:3000/api)
+const leaderboard = new Leaderboard(params.get('api') || '/api');
+
+// game over → back to the drifting world, menu with leaderboard on top
+ctx.afterGameOver = (score) => {
+  leaderboard.onGameOver(score);
+  modeManager.switchTo('idle');
+  setPaused(true, 'Game Over');
+};
 
 // ---- multi-display sync (?sync=master | ?sync=follow) ----
 const syncRole = params.get('sync');
@@ -59,11 +71,12 @@ if (params.get('demo')) startDemo();
 // ---- ESC / pause menu ----
 let paused = false;
 
-function setPaused(p) {
+function setPaused(p, title) {
   if (paused === p || syncRole === 'follow') return;
   paused = p;
   if (p) {
-    menu.show(modeManager.list(), modeManager.current.id);
+    menu.show(modeManager.list(), modeManager.current.id, title);
+    leaderboard.refresh();
   } else {
     menu.hide();
     // don't let time spent in the menu count as idle time

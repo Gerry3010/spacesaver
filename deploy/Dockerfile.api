@@ -1,0 +1,6 @@
+FROM node:24-alpine
+WORKDIR /app
+COPY server/ ./server/
+VOLUME /data
+EXPOSE 3000
+CMD ["node", "server/index.mjs"]

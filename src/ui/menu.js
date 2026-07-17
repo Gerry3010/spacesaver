@@ -21,7 +21,8 @@ export class Menu {
   }
 
   /** (Re)build the mode buttons from the registry and highlight the current one. */
-  show(modes, currentId) {
+  show(modes, currentId, title = 'Pause') {
+    document.getElementById('menu-title').textContent = title;
     this.modesEl.innerHTML = '';
     for (const mode of modes) {
       if (!mode.label) continue; // unlisted/internal modes stay hidden

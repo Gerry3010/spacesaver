@@ -84,6 +84,26 @@ cap, half-res bloom, full stop while the tab is hidden.
 - tab hidden → CPU/GPU near zero; resize + fullscreen OK
 - `dist/spacesaver.html` works from `file://` with network off
 
+## Leaderboard
+
+After game over the pause menu opens (title "Game Over") with the top-10 list.
+First submission asks for a name (2–20 chars, optionally guarded by Cloudflare
+Turnstile); the server issues a minimal HS256 JWT `{id, name}` that the client
+keeps in localStorage — later scores submit automatically under that identity.
+
+API (`server/`, zero dependencies — node:http + node:sqlite + HMAC-JWT):
+`GET /api/config` (Turnstile sitekey), `GET /api/leaderboard` (top 10 + own
+rank with auth), `POST /api/register` (name + Turnstile → JWT),
+`POST /api/score` (auth; validated + rate-limited). Data in a named volume
+(`leaderboard-data`), proxied as `/api/` by the web container's nginx.
+
+Config via `deploy/.env` (gitignored): `JWT_SECRET` (required),
+`TURNSTILE_SITEKEY`/`TURNSTILE_SECRET` (optional — without them registration
+runs captcha-free, e.g. local dev). A widget for `geraldhofbauer.net` covers
+the subdomain automatically. Local dev:
+`JWT_SECRET=dev DB_PATH=/tmp/lb.db node server/index.mjs` +
+open the game with `?api=http://127.0.0.1:3000/api`.
+
 ## Deploy (spacesaver.geraldhofbauer.net)
 
 Standard pattern: container on a localhost port, host nginx terminates TLS.

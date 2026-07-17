@@ -56,7 +56,9 @@ export const coinRushMode = {
         return;
       }
       if (world.time > this.gameOverAt + CONFIG.gameOverTime) {
-        ctx.modeManager.switchTo('idle');
+        // hand off to the game-over menu (leaderboard) when available
+        if (ctx.afterGameOver) ctx.afterGameOver(this.score);
+        else ctx.modeManager.switchTo('idle');
       }
       return;
     }
