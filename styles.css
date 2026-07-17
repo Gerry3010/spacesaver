@@ -519,6 +519,12 @@ body.paused { cursor: default !important; }
   display: none;
 }
 
+/* Icon buttons: the inline SVG must never become the tap target, or the click
+   fails to bubble to the button on touch (desktop is forgiving, mobile isn't).
+   touch-action keeps taps snappy (no gesture ambiguity). */
+#pause-btn, #mute-btn, #fs-btn { touch-action: manipulation; }
+#pause-btn svg, #mute-btn svg, #pause-btn svg *, #mute-btn svg * { pointer-events: none; }
+
 /* ---- fullscreen button ---- */
 #fs-btn {
   position: fixed;
