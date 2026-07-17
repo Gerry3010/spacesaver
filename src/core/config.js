@@ -46,5 +46,5 @@ export const CONFIG = {
   lives: 3,
   invulnTime: 2.0,
   comboWindow: 2.0,
-  gameOverTime: 2.5, // card alone; then the menu with the leaderboard opens
+  gameOverTime: 1.5, // card alone; then the menu with the leaderboard opens
 };

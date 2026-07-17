@@ -51,12 +51,13 @@ export const coinRushMode = {
 
     if (this.state === 'gameover') {
       world.speed += (CONFIG.idleSpeed - world.speed) * Math.min(dt * 0.8, 1);
-      if (input.activitySince(this.gameOverAt + 0.7)) {
+      // demo loops forever; real players get the menu — a move-to-restart
+      // here would fire from the mouse settling and lock them out of it
+      if (ctx.isDemo?.() && input.activitySince(this.gameOverAt + 0.7)) {
         this._startRun(ctx);
         return;
       }
       if (world.time > this.gameOverAt + CONFIG.gameOverTime) {
-        // hand off to the game-over menu (leaderboard) when available
         if (ctx.afterGameOver) ctx.afterGameOver(this.score);
         else ctx.modeManager.switchTo('idle');
       }

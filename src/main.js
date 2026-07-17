@@ -48,6 +48,7 @@ ctx.afterGameOver = (score) => {
   modeManager.switchTo('idle');
   setPaused(true, 'Game Over');
 };
+ctx.isDemo = () => demoActive;
 
 // ---- multi-display sync (?sync=master | ?sync=follow) ----
 const syncRole = params.get('sync');
