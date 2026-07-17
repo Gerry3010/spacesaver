@@ -44,6 +44,14 @@ export class Input {
       this._forceActivity = true;
     });
 
+    // wheel throttle (Explore); menus keep native scrolling while paused
+    this._wheelAcc = 0;
+    window.addEventListener('wheel', (e) => {
+      if (document.body.classList.contains('paused')) return;
+      this._wheelAcc += e.deltaY;
+      e.preventDefault();
+    }, { passive: false });
+
     const fsBtn = document.getElementById('fs-btn');
     if (fsBtn) fsBtn.addEventListener('click', toggleFullscreen);
   }
@@ -66,6 +74,13 @@ export class Input {
   /** True if there was significant activity after the given engine-time. */
   activitySince(t) {
     return this.lastActivity > t;
+  }
+
+  /** Wheel delta accumulated since the last call (consumer resets it). */
+  consumeWheel() {
+    const w = this._wheelAcc;
+    this._wheelAcc = 0;
+    return w;
   }
 }
 

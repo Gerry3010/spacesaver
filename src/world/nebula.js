@@ -74,6 +74,9 @@ const SPRITE_PARALLAX = 0.22;
 
 export class Nebula {
   constructor(scene, seed = 1337) {
+    // everything lives in one group so Explore can rotate the whole sky
+    this.group = new THREE.Group();
+    scene.add(this.group);
     const geo = new THREE.SphereGeometry(900, 32, 24);
     this.mat = new THREE.ShaderMaterial({
       vertexShader: VERT,
@@ -85,7 +88,7 @@ export class Nebula {
     const sphere = new THREE.Mesh(geo, this.mat);
     sphere.renderOrder = -10;
     sphere.frustumCulled = false;
-    scene.add(sphere);
+    this.group.add(sphere);
 
     // drifting glow sprites — positions are pure f(scroll), so multiple
     // synced windows render the exact same clouds
@@ -107,12 +110,15 @@ export class Nebula {
       const size = 140 + rng() * 180;
       s.scale.set(size, size * (0.6 + rng() * 0.5), 1);
       s.renderOrder = -5;
-      scene.add(s);
+      this.group.add(s);
       this.sprites.push(s);
     }
   }
 
-  update(scroll, time) {
+  /** attitude rotates the whole sky; sprite drift stays along local z —
+   *  an acceptable approximation for diffuse haze while turning. */
+  update(scroll, time, attitude) {
+    this.group.quaternion.copy(attitude);
     this.mat.uniforms.uTime.value = time;
     const travel = scroll * SPRITE_PARALLAX;
     for (let i = 0; i < this.sprites.length; i++) {

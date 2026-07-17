@@ -9,6 +9,7 @@ import { Leaderboard } from './ui/leaderboard.js';
 import { CONFIG } from './core/config.js';
 import { idleMode } from './modes/idle-mode.js';
 import { coinRushMode } from './modes/coin-rush-mode.js';
+import { exploreMode } from './modes/explore-mode.js';
 
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug');
@@ -37,6 +38,12 @@ const ctx = { world, input, hud };
 const modeManager = new ModeManager(ctx);
 modeManager.register(idleMode);
 modeManager.register(coinRushMode);
+// Explore needs mouse-look + scroll wheel — desktop only for now (touch
+// would need its own control scheme; deliberately deferred). The demo param
+// overrides so headless screenshot runs (no pointer at all) still work.
+if (window.matchMedia('(pointer: fine)').matches || params.get('demo') === 'explore') {
+  modeManager.register(exploreMode);
+}
 modeManager.switchTo('idle');
 
 // leaderboard (?api= overrides for local dev, e.g. ?api=http://127.0.0.1:3000/api)
@@ -67,7 +74,11 @@ function startDemo() {
   input.moveAcc = 0; // real mouse movement from here on ends the demo
   modeManager.switchTo('coin-rush');
 }
-if (params.get('demo')) startDemo();
+// ?demo=coin-rush → synthetic pilot; ?demo=explore (+&goto=<host>) → jump
+// straight into a mode without the pilot override
+const demoParam = params.get('demo');
+if (demoParam === 'coin-rush') startDemo();
+else if (demoParam) modeManager.switchTo(demoParam);
 
 // ---- ESC / pause menu ----
 let paused = false;
@@ -134,7 +145,7 @@ engine.start((dt) => {
     return;
   }
 
-  if (demoActive) {
+  if (demoActive && modeManager.current.id === 'coin-rush') {
     input.nx = Math.sin(world.time * 0.5) * 0.6;
     input.ny = Math.sin(world.time * 0.37) * 0.5;
     input.lastActivity = world.time;

@@ -1,0 +1,1023 @@
+{
+  "source": "NASA Exoplanet Archive (pscomppars) + Sol (manual)",
+  "fetched": "2026-07-17",
+  "systems": [
+    {
+      "host": "Sol",
+      "spectype": "G2 V",
+      "teff": 5772,
+      "stRad": 1,
+      "distLy": 0,
+      "planets": [
+        {
+          "name": "Mercury",
+          "rade": 0.383,
+          "masse": 0.055,
+          "period": 88,
+          "eqt": 440,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Venus",
+          "rade": 0.949,
+          "masse": 0.815,
+          "period": 224.7,
+          "eqt": 227,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Earth",
+          "rade": 1,
+          "masse": 1,
+          "period": 365.25,
+          "eqt": 255,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Mars",
+          "rade": 0.532,
+          "masse": 0.107,
+          "period": 687,
+          "eqt": 210,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Jupiter",
+          "rade": 11.21,
+          "masse": 317.8,
+          "period": 4332.6,
+          "eqt": 122,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Saturn",
+          "rade": 9.45,
+          "masse": 95.2,
+          "period": 10759,
+          "eqt": 90,
+          "discYear": null,
+          "discMethod": null
+        },
+        {
+          "name": "Uranus",
+          "rade": 4.01,
+          "masse": 14.5,
+          "period": 30688,
+          "eqt": 64,
+          "discYear": 1781,
+          "discMethod": "Telescope"
+        },
+        {
+          "name": "Neptune",
+          "rade": 3.88,
+          "masse": 17.1,
+          "period": 60182,
+          "eqt": 51,
+          "discYear": 1846,
+          "discMethod": "Telescope"
+        }
+      ]
+    },
+    {
+      "host": "Proxima Cen",
+      "spectype": "M5.5 V",
+      "teff": 2900,
+      "stRad": 0.141,
+      "distLy": 4.2,
+      "planets": [
+        {
+          "name": "Proxima Cen d",
+          "rade": 0.692,
+          "masse": 0.26,
+          "period": 5.12338,
+          "eqt": 282,
+          "discYear": 2025,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "Proxima Cen b",
+          "rade": 1.02,
+          "masse": 1.055,
+          "period": 11.18465,
+          "eqt": 218,
+          "discYear": 2016,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "tau Cet",
+      "spectype": "G8.5V",
+      "teff": 5310,
+      "stRad": 0.83,
+      "distLy": 11.8,
+      "planets": [
+        {
+          "name": "tau Cet g",
+          "rade": 1.18,
+          "masse": 1.75,
+          "period": 20,
+          "eqt": 639.65,
+          "discYear": 2017,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "tau Cet h",
+          "rade": 1.19,
+          "masse": 1.83,
+          "period": 49.41,
+          "eqt": 473.22,
+          "discYear": 2017,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "tau Cet f",
+          "rade": 1.81,
+          "masse": 3.93,
+          "period": 636.13,
+          "eqt": 201.97,
+          "discYear": 2017,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "GJ 876",
+      "spectype": "M2.5V",
+      "teff": 3293.74,
+      "stRad": 0.3,
+      "distLy": 15.2,
+      "planets": [
+        {
+          "name": "GJ 876 d",
+          "rade": 2.51,
+          "masse": 6.83,
+          "period": 1.93778,
+          "eqt": 603.09,
+          "discYear": 2005,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 876 c",
+          "rade": 14,
+          "masse": 226.9846,
+          "period": 30.0881,
+          "eqt": 241.66,
+          "discYear": 2000,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 876 b",
+          "rade": 13.3,
+          "masse": 723.2235,
+          "period": 61.1166,
+          "eqt": 190.6,
+          "discYear": 1998,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 876 e",
+          "rade": 3.92,
+          "masse": 14.6,
+          "period": 124.26,
+          "eqt": 150.46,
+          "discYear": 2010,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "GJ 581",
+      "spectype": "M3.0 V",
+      "teff": 3500,
+      "stRad": 0.302,
+      "distLy": 20.5,
+      "planets": [
+        {
+          "name": "GJ 581 e",
+          "rade": 1.38,
+          "masse": 2.48,
+          "period": 3.1481,
+          "eqt": 554.37,
+          "discYear": 2009,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 581 b",
+          "rade": 4.79,
+          "masse": 20.5,
+          "period": 5.3686,
+          "eqt": 464.32,
+          "discYear": 2005,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 581 c",
+          "rade": 2.5,
+          "masse": 6.81,
+          "period": 12.9211,
+          "eqt": 346.13,
+          "discYear": 2007,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "GJ 667 C",
+      "spectype": "M1.5 V",
+      "teff": 3350,
+      "stRad": null,
+      "distLy": 23.6,
+      "planets": [
+        {
+          "name": "GJ 667 C b",
+          "rade": 2.25,
+          "masse": 5.68,
+          "period": 7.203,
+          "eqt": null,
+          "discYear": 2012,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 667 C c",
+          "rade": 1.77,
+          "masse": 3.8,
+          "period": 28.14,
+          "eqt": null,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 667 C f",
+          "rade": 1.45,
+          "masse": 2.7,
+          "period": 39.026,
+          "eqt": null,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 667 C e",
+          "rade": 1.45,
+          "masse": 2.7,
+          "period": 62.24,
+          "eqt": null,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "GJ 667 C g",
+          "rade": 1.99,
+          "masse": 4.6,
+          "period": 256.2,
+          "eqt": null,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "TRAPPIST-1",
+      "spectype": "M8.0 V",
+      "teff": 2566,
+      "stRad": 0.1192,
+      "distLy": 40.5,
+      "planets": [
+        {
+          "name": "TRAPPIST-1 b",
+          "rade": 1.116,
+          "masse": 1.374,
+          "period": 1.510826,
+          "eqt": 397.6,
+          "discYear": 2016,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 c",
+          "rade": 1.097,
+          "masse": 1.308,
+          "period": 2.421937,
+          "eqt": 339.7,
+          "discYear": 2016,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 d",
+          "rade": 0.788,
+          "masse": 0.388,
+          "period": 4.049219,
+          "eqt": 286.2,
+          "discYear": 2016,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 e",
+          "rade": 0.92,
+          "masse": 0.692,
+          "period": 6.101013,
+          "eqt": 249.7,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 f",
+          "rade": 1.045,
+          "masse": 1.039,
+          "period": 9.20754,
+          "eqt": 217.7,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 g",
+          "rade": 1.129,
+          "masse": 1.321,
+          "period": 12.352446,
+          "eqt": 197.3,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TRAPPIST-1 h",
+          "rade": 0.755,
+          "masse": 0.326,
+          "period": 18.772866,
+          "eqt": 171.7,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "55 Cnc",
+      "spectype": "G8 V",
+      "teff": 5198,
+      "stRad": 0.98,
+      "distLy": 41,
+      "planets": [
+        {
+          "name": "55 Cnc e",
+          "rade": 1.875,
+          "masse": 7.99,
+          "period": 0.7365474,
+          "eqt": 1958,
+          "discYear": 2004,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "55 Cnc b",
+          "rade": 13.9,
+          "masse": 263.9785,
+          "period": 14.651552,
+          "eqt": 700,
+          "discYear": 1996,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "55 Cnc c",
+          "rade": 8.51,
+          "masse": 54.4738,
+          "period": 44.3936,
+          "eqt": 499.27,
+          "discYear": 2004,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "55 Cnc f",
+          "rade": 7.59,
+          "masse": 44.812,
+          "period": 260.58,
+          "eqt": 277.07,
+          "discYear": 2007,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "55 Cnc d",
+          "rade": 13,
+          "masse": 1232.493,
+          "period": 4799,
+          "eqt": 104.85,
+          "discYear": 2002,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "HD 40307",
+      "spectype": "K2.5 V",
+      "teff": 4956,
+      "stRad": 0.716684,
+      "distLy": 42.2,
+      "planets": [
+        {
+          "name": "HD 40307 b",
+          "rade": null,
+          "masse": 1188.99607059,
+          "period": 4.3123,
+          "eqt": 910,
+          "discYear": 2009,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "HD 40307 c",
+          "rade": null,
+          "masse": 1868.51320475,
+          "period": 9.6184,
+          "eqt": 696,
+          "discYear": 2009,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "HD 40307 d",
+          "rade": null,
+          "masse": 1775.3894815,
+          "period": 20.432,
+          "eqt": 541,
+          "discYear": 2009,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "HD 40307 f",
+          "rade": 2.13,
+          "masse": 5.2,
+          "period": 51.76,
+          "eqt": 398,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "HD 40307 g",
+          "rade": 2.56,
+          "masse": 7.1,
+          "period": 197.8,
+          "eqt": 255,
+          "discYear": 2013,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "GJ 1214",
+      "spectype": "M4 V",
+      "teff": 3101,
+      "stRad": 0.2162,
+      "distLy": 47.8,
+      "planets": [
+        {
+          "name": "GJ 1214 b",
+          "rade": 2.733,
+          "masse": 8.41,
+          "period": 1.580404531,
+          "eqt": 567,
+          "discYear": 2009,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "LHS 1140",
+      "spectype": "M4.5 V",
+      "teff": 3096,
+      "stRad": 0.2159,
+      "distLy": 48.9,
+      "planets": [
+        {
+          "name": "LHS 1140 c",
+          "rade": 1.272,
+          "masse": 1.91,
+          "period": 3.77794,
+          "eqt": 422,
+          "discYear": 2018,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "LHS 1140 b",
+          "rade": 1.73,
+          "masse": 5.6,
+          "period": 24.73723,
+          "eqt": 226,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "51 Peg",
+      "spectype": "G5V",
+      "teff": 5761,
+      "stRad": 1.19,
+      "distLy": 50.4,
+      "planets": [
+        {
+          "name": "51 Peg b",
+          "rade": 14.1,
+          "masse": 193.87532827,
+          "period": 4.2307966,
+          "eqt": 1328.93,
+          "discYear": 1995,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "HD 189733",
+      "spectype": "K2 V",
+      "teff": 5052,
+      "stRad": 0.75,
+      "distLy": 64.5,
+      "planets": [
+        {
+          "name": "HD 189733 b",
+          "rade": 12.66617,
+          "masse": 359.1479,
+          "period": 2.21857567,
+          "eqt": 1209,
+          "discYear": 2005,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "TOI-700",
+      "spectype": "M2.5 V",
+      "teff": 3459,
+      "stRad": 0.421,
+      "distLy": 101.5,
+      "planets": [
+        {
+          "name": "TOI-700 b",
+          "rade": 0.914,
+          "masse": 0.704,
+          "period": 9.977219,
+          "eqt": 417,
+          "discYear": 2020,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TOI-700 c",
+          "rade": 2.6,
+          "masse": 7.27,
+          "period": 16.051137,
+          "eqt": 356,
+          "discYear": 2020,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TOI-700 e",
+          "rade": 0.953,
+          "masse": 0.818,
+          "period": 27.80978,
+          "eqt": 272.9,
+          "discYear": 2023,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "TOI-700 d",
+          "rade": 1.073,
+          "masse": 1.25,
+          "period": 37.42396,
+          "eqt": 268.8,
+          "discYear": 2020,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-444",
+      "spectype": "K",
+      "teff": 5046,
+      "stRad": 0.752,
+      "distLy": 118.8,
+      "planets": [
+        {
+          "name": "Kepler-444 b",
+          "rade": 0.403,
+          "masse": 0.0374,
+          "period": 3.6001053,
+          "eqt": 938,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-444 c",
+          "rade": 0.497,
+          "masse": 0.0793,
+          "period": 4.5458841,
+          "eqt": 868,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-444 d",
+          "rade": 0.53,
+          "masse": 0.2,
+          "period": 6.189392,
+          "eqt": 783,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-444 e",
+          "rade": 0.546,
+          "masse": 0.1,
+          "period": 7.743493,
+          "eqt": 727,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-444 f",
+          "rade": 0.741,
+          "masse": 0.332,
+          "period": 9.740486,
+          "eqt": 673,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "K2-18",
+      "spectype": "M2.5 V",
+      "teff": 3457,
+      "stRad": 0.411,
+      "distLy": 124,
+      "planets": [
+        {
+          "name": "K2-18 c",
+          "rade": 2.65,
+          "masse": 7.51,
+          "period": 8.962,
+          "eqt": 363,
+          "discYear": 2017,
+          "discMethod": "Radial Velocity"
+        },
+        {
+          "name": "K2-18 b",
+          "rade": 2.37,
+          "masse": 8.92,
+          "period": 32.939623,
+          "eqt": 284,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "HR 8799",
+      "spectype": "A5 V",
+      "teff": 7204.58,
+      "stRad": 1.49338,
+      "distLy": 134.5,
+      "planets": [
+        {
+          "name": "HR 8799 e",
+          "rade": 13.11453,
+          "masse": 3178.3,
+          "period": 20815.6,
+          "eqt": 1150,
+          "discYear": 2010,
+          "discMethod": "Imaging"
+        },
+        {
+          "name": "HR 8799 d",
+          "rade": 13,
+          "masse": 3000,
+          "period": 37000,
+          "eqt": 1300,
+          "discYear": 2008,
+          "discMethod": "Imaging"
+        },
+        {
+          "name": "HR 8799 c",
+          "rade": 13,
+          "masse": 3000,
+          "period": 69000,
+          "eqt": 1200,
+          "discYear": 2008,
+          "discMethod": "Imaging"
+        },
+        {
+          "name": "HR 8799 b",
+          "rade": 13,
+          "masse": 2000,
+          "period": 170000,
+          "eqt": 1200,
+          "discYear": 2008,
+          "discMethod": "Imaging"
+        }
+      ]
+    },
+    {
+      "host": "HD 209458",
+      "spectype": "G0 V",
+      "teff": 6091,
+      "stRad": 1.19,
+      "distLy": 157.5,
+      "planets": [
+        {
+          "name": "HD 209458 b",
+          "rade": 15.58051,
+          "masse": 232.0159,
+          "period": 3.52474859,
+          "eqt": 1459,
+          "discYear": 1999,
+          "discMethod": "Radial Velocity"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-16",
+      "spectype": null,
+      "teff": 4450,
+      "stRad": 0.6489,
+      "distLy": 244.9,
+      "planets": [
+        {
+          "name": "Kepler-16 b",
+          "rade": 8.4493,
+          "masse": 105.833,
+          "period": 228.776,
+          "eqt": 205.9,
+          "discYear": 2011,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-186",
+      "spectype": "M1",
+      "teff": 3788,
+      "stRad": 0.472,
+      "distLy": 579.2,
+      "planets": [
+        {
+          "name": "Kepler-186 b",
+          "rade": 1.07,
+          "masse": 1.24,
+          "period": 3.8867907,
+          "eqt": 571,
+          "discYear": 2014,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-186 c",
+          "rade": 1.25,
+          "masse": 2.1,
+          "period": 7.267302,
+          "eqt": 464,
+          "discYear": 2014,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-186 d",
+          "rade": 1.4,
+          "masse": 2.54,
+          "period": 13.342996,
+          "eqt": 379,
+          "discYear": 2014,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-186 e",
+          "rade": 1.27,
+          "masse": 2.15,
+          "period": 22.407704,
+          "eqt": 319,
+          "discYear": 2014,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-186 f",
+          "rade": 1.17,
+          "masse": 1.71,
+          "period": 129.9441,
+          "eqt": 177,
+          "discYear": 2014,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-22",
+      "spectype": "G5 V",
+      "teff": 5596,
+      "stRad": 0.869,
+      "distLy": 634.8,
+      "planets": [
+        {
+          "name": "Kepler-22 b",
+          "rade": 2.1,
+          "masse": 9.1,
+          "period": 289.863876,
+          "eqt": 279,
+          "discYear": 2011,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "HAT-P-7",
+      "spectype": "F6 V",
+      "teff": 6389,
+      "stRad": 2,
+      "distLy": 1112.4,
+      "planets": [
+        {
+          "name": "HAT-P-7 b",
+          "rade": 16.92559,
+          "masse": 584.8072,
+          "period": 2.20474,
+          "eqt": 2733,
+          "discYear": 2008,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "WASP-12",
+      "spectype": null,
+      "teff": 6265,
+      "stRad": 1.69,
+      "distLy": 1393.5,
+      "planets": [
+        {
+          "name": "WASP-12 b",
+          "rade": 22.02564708,
+          "masse": 467.2101,
+          "period": 1.091418901,
+          "eqt": 2601,
+          "discYear": 2008,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-452",
+      "spectype": "G2",
+      "teff": 5757,
+      "stRad": 1.11,
+      "distLy": 1799.5,
+      "planets": [
+        {
+          "name": "Kepler-452 b",
+          "rade": 1.63,
+          "masse": 3.29,
+          "period": 384.843,
+          "eqt": 265,
+          "discYear": 2015,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-11",
+      "spectype": null,
+      "teff": 5663,
+      "stRad": 1.065,
+      "distLy": 2108.1,
+      "planets": [
+        {
+          "name": "Kepler-11 b",
+          "rade": 1.8,
+          "masse": 1.9,
+          "period": 10.3039,
+          "eqt": 849,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-11 c",
+          "rade": 2.87,
+          "masse": 2.9,
+          "period": 13.0241,
+          "eqt": 786,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-11 d",
+          "rade": 3.12,
+          "masse": 7.3,
+          "period": 22.6845,
+          "eqt": 653,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-11 e",
+          "rade": 4.19,
+          "masse": 8,
+          "period": 31.9996,
+          "eqt": 582,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-11 f",
+          "rade": 2.49,
+          "masse": 2,
+          "period": 46.6888,
+          "eqt": 513,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-11 g",
+          "rade": 3.33,
+          "masse": 25,
+          "period": 118.3807,
+          "eqt": 376,
+          "discYear": 2010,
+          "discMethod": "Transit"
+        }
+      ]
+    },
+    {
+      "host": "Kepler-90",
+      "spectype": null,
+      "teff": 6031.13,
+      "stRad": 1.185,
+      "distLy": 2766.6,
+      "planets": [
+        {
+          "name": "Kepler-90 b",
+          "rade": 1.31,
+          "masse": 2.27,
+          "period": 7.008151,
+          "eqt": 1062,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 c",
+          "rade": 1.19,
+          "masse": 1.81,
+          "period": 8.719375,
+          "eqt": 987,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 i",
+          "rade": 1.32,
+          "masse": 2.3,
+          "period": 14.44912,
+          "eqt": 709,
+          "discYear": 2017,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 d",
+          "rade": 2.87,
+          "masse": 8.6,
+          "period": 59.73667,
+          "eqt": 520,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 e",
+          "rade": 2.66,
+          "masse": 7.56,
+          "period": 91.93913,
+          "eqt": 450,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 f",
+          "rade": 2.88,
+          "masse": 8.65,
+          "period": 124.9144,
+          "eqt": 407,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 g",
+          "rade": 7.718,
+          "masse": 15,
+          "period": 210.73514,
+          "eqt": 342,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        },
+        {
+          "name": "Kepler-90 h",
+          "rade": 11.252,
+          "masse": 203,
+          "period": 331.60296,
+          "eqt": 294,
+          "discYear": 2013,
+          "discMethod": "Transit"
+        }
+      ]
+    }
+  ]
+}

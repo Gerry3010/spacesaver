@@ -6,7 +6,7 @@ import { mulberry32 } from '../core/rng.js';
 // with mod() as uScroll grows. Infinity for free, zero CPU work, 3 draw calls.
 
 const VERT = /* glsl */ `
-  uniform float uScroll;
+  uniform vec3 uScrollVec;
   uniform float uBox;
   attribute float aSize;
   attribute vec3 aColor;
@@ -14,8 +14,8 @@ const VERT = /* glsl */ `
   varying vec3 vColor;
   varying float vSeed;
   void main() {
-    vec3 p = position;
-    p.z = mod(p.z + uScroll + uBox * 0.5, uBox) - uBox * 0.5;
+    // wrap in all three axes so flight can point anywhere (Explore mode)
+    vec3 p = mod(position + uScrollVec + uBox * 0.5, vec3(uBox)) - uBox * 0.5;
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_PointSize = aSize * (320.0 / max(-mv.z, 1.0));
     gl_Position = projectionMatrix * mv;
@@ -77,7 +77,7 @@ export class Starfield {
         vertexShader: VERT,
         fragmentShader: FRAG,
         uniforms: {
-          uScroll: { value: 0 },
+          uScrollVec: { value: new THREE.Vector3() },
           uBox: { value: layer.box },
           uTime: { value: 0 },
           uBrightness: { value: layer.brightness },
@@ -94,11 +94,16 @@ export class Starfield {
     }
   }
 
-  /** Pure function of total scrolled distance — sync-friendly across windows. */
-  update(scroll, time) {
+  /**
+   * @param {THREE.Vector3} shift accumulated flight translation in star-pattern
+   *   space (plain (0,0,scroll) outside Explore — sync-friendly)
+   * @param {THREE.Quaternion} attitude rotation applied to the star sky
+   */
+  update(shift, time, attitude) {
     for (const l of this.layers) {
-      l.mat.uniforms.uScroll.value = scroll * l.parallax;
+      l.mat.uniforms.uScrollVec.value.copy(shift).multiplyScalar(l.parallax);
       l.mat.uniforms.uTime.value = time;
+      l.points.quaternion.copy(attitude);
     }
   }
 }

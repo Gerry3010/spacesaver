@@ -87,9 +87,10 @@ export class Trail {
     this.color[i * 3 + 2] = b;
   }
 
-  /** Engine exhaust from both nozzles, rate scaled with world speed. */
+  /** Engine exhaust from both nozzles, rate scaled with world speed
+   *  (idles down to embers when the ship stands still in Explore). */
   emitEngine(dt, ship, worldSpeed) {
-    this.emitAcc += dt * CONFIG.trail.rate;
+    this.emitAcc += dt * CONFIG.trail.rate * Math.min(Math.max(worldSpeed / 60, 0.1), 1);
     while (this.emitAcc >= 1) {
       this.emitAcc -= 1;
       for (let k = 0; k < 2; k++) {

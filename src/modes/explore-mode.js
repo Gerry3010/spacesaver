@@ -1,0 +1,182 @@
+import * as THREE from 'three';
+import systemsData from '../data/systems.json';
+import { buildSystem } from '../world/planet-factory.js';
+import { ExploreHud } from '../ui/explore-hud.js';
+import { turnRate, approachSpeed, angleDelta, systemPosition } from '../game/explore-math.js';
+
+// Explore: ~26 real star systems floating in one big volume. Pick a target
+// from the list (L), the autopilot flies you there and brakes; look around
+// with the mouse (push away from center to turn), scroll wheel = throttle.
+// Gazing at a planet or star shows its real data. No idle timeout — reading
+// is allowed. Desktop-only (registered only for fine pointers, see main.js).
+
+const MAX_SPEED = 260;
+const _fwd = new THREE.Vector3();
+const _dir = new THREE.Vector3();
+const _sysPos = new THREE.Vector3();
+
+export const exploreMode = {
+  id: 'explore',
+  label: 'Explore',
+  universe: null,
+
+  _init(ctx) {
+    if (this.universe) return;
+    this.universe = new THREE.Group();
+    this.systems = [];
+    systemsData.systems.forEach((sys, i) => {
+      const built = buildSystem(sys);
+      const [x, y, z] = systemPosition(i);
+      built.group.position.set(x, y, z);
+      built.pos = new THREE.Vector3(x, y, z);
+      built.sys = sys;
+      built.arrive = built.starR * 6 + 60;
+      this.universe.add(built.group);
+      this.systems.push(built);
+    });
+    this.gazeTargets = this.systems.flatMap((s) => s.gazeTargets);
+    ctx.world.scene.add(this.universe);
+
+    // one shared point light, parked at the nearest star (26 real lights
+    // would drown the forward renderer)
+    this.starLight = new THREE.PointLight(0xffffff, 3000, 900, 1.6);
+    this.universe.add(this.starLight);
+
+    this.raycaster = new THREE.Raycaster();
+    this.raycaster.far = 700;
+    this.hud = new ExploreHud();
+    this.hud.onSelect = (i) => this._flyTo(i);
+    this.visited = new Set();
+    this.worldPos = new THREE.Vector3();
+    this.heading = new THREE.Quaternion();
+    this._euler = new THREE.Euler(0, 0, 0, 'YXZ');
+  },
+
+  enter(ctx) {
+    this._init(ctx);
+    this.universe.visible = true;
+    // start just outside Sol, looking at the sun
+    this.yaw = 0;
+    this.pitch = 0;
+    this.worldPos.set(0, 10, 330);
+    this.throttle = 0.25;
+    this.autopilot = null;
+    this.gazeCooldown = 0;
+    this.visited.add('Sol');
+    ctx.hud.setPlaying(false);
+    this.hud.setActive(true);
+    this.hud.renderList(systemsData.systems, this.visited, 0);
+
+    // ?goto=<host>: immediate autopilot target (headless screenshots/tuning)
+    const goto_ = new URLSearchParams(location.search).get('goto');
+    if (goto_) {
+      const i = this.systems.findIndex((x) => x.sys.host.toLowerCase() === goto_.toLowerCase());
+      if (i >= 0) this._flyTo(i);
+    }
+  },
+
+  _flyTo(i) {
+    this.autopilot = this.systems[i];
+    this.hud.renderList(systemsData.systems, this.visited, i);
+  },
+
+  update(dt, ctx) {
+    const { world, input } = ctx;
+
+    // throttle
+    const wheel = input.consumeWheel();
+    if (wheel !== 0) {
+      this.throttle = THREE.MathUtils.clamp(this.throttle - wheel * 0.0005, 0, 1);
+      if (this.autopilot) this.autopilot = null; // manual override
+    }
+
+    // steering
+    const yawRate = -turnRate(input.nx);
+    const pitchRate = turnRate(input.ny);
+    let speed;
+
+    if (this.autopilot) {
+      const t = this.autopilot;
+      _dir.copy(t.pos).sub(this.worldPos);
+      const dist = _dir.length();
+      _dir.normalize();
+      const wantYaw = Math.atan2(-_dir.x, -_dir.z);
+      const wantPitch = Math.asin(THREE.MathUtils.clamp(_dir.y, -1, 1));
+      this.yaw += THREE.MathUtils.clamp(angleDelta(this.yaw, wantYaw), -1.1 * dt, 1.1 * dt);
+      this.pitch += THREE.MathUtils.clamp(angleDelta(this.pitch, wantPitch), -1.1 * dt, 1.1 * dt);
+      speed = approachSpeed(dist, t.arrive, MAX_SPEED);
+      if (yawRate !== 0 || pitchRate !== 0) {
+        this.autopilot = null; // player takes the stick
+      } else if (dist <= t.arrive + 2) {
+        this.visited.add(t.sys.host);
+        this.throttle = 0;
+        this.autopilot = null;
+        this.hud.renderList(systemsData.systems, this.visited, -1);
+      }
+    } else {
+      this.yaw += yawRate * dt;
+      this.pitch = THREE.MathUtils.clamp(this.pitch + pitchRate * dt, -1.35, 1.35);
+      speed = this.throttle * MAX_SPEED;
+    }
+
+    this._euler.set(this.pitch, this.yaw, 0);
+    this.heading.setFromEuler(this._euler);
+
+    // fly
+    _fwd.set(0, 0, -1).applyQuaternion(this.heading);
+    this.worldPos.addScaledVector(_fwd, speed * dt);
+    world.speed = speed;
+
+    // sky + universe get the inverse attitude (world rotates around the ship)
+    world.attitude.copy(this.heading).invert();
+    this.universe.quaternion.copy(world.attitude);
+    this.universe.position.copy(this.worldPos).negate().applyQuaternion(world.attitude);
+
+    // ship leans into turns; slight idle breathing otherwise
+    world.ship.setTarget(-yawRate * 9, pitchRate * 5 + Math.sin(world.time * 0.4) * 0.8);
+
+    // planets spin on their own axis
+    for (const s of this.systems) {
+      for (const p of s.planets) p.mesh.rotation.y += p.spin * dt;
+    }
+
+    // shared star light follows the nearest system
+    let nearest = null;
+    let best = Infinity;
+    for (const s of this.systems) {
+      const d = s.pos.distanceToSquared(this.worldPos);
+      if (d < best) {
+        best = d;
+        nearest = s;
+      }
+    }
+    this.starLight.position.copy(nearest.pos);
+
+    this.hud.setThrottle(this.autopilot ? speed / MAX_SPEED : this.throttle, speed);
+
+    // gaze info (center raycast, throttled)
+    this.gazeCooldown -= dt;
+    if (this.gazeCooldown <= 0) {
+      this.gazeCooldown = 0.12;
+      this.raycaster.setFromCamera(_center, world.camera);
+      const hit = this.raycaster.intersectObjects(this.gazeTargets, false)[0];
+      if (hit) {
+        const u = hit.object.userData;
+        if (u.kind === 'planet') this.hud.showPlanet(u.planet, u.sys);
+        else this.hud.showStar(u.sys);
+      } else {
+        this.hud.hideInfo();
+      }
+    }
+    // deliberately no idle timeout — Explore doubles as an ambient museum
+  },
+
+  exit(ctx) {
+    this.universe.visible = false;
+    ctx.world.attitude.identity();
+    ctx.world.shift.set(0, 0, ctx.world.scroll); // re-align stars with plain z-flow
+    this.hud.setActive(false);
+  },
+};
+
+const _center = new THREE.Vector2(0, 0);
