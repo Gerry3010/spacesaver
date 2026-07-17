@@ -7,10 +7,13 @@ import {
 
 test('turnRate: deadzone, symmetry, max at edge', () => {
   assert.equal(turnRate(0), 0);
-  assert.equal(turnRate(0.1), 0);
+  assert.equal(turnRate(0.05), 0); // inside the (smaller) deadzone
   assert.ok(turnRate(0.5) > 0);
   assert.equal(turnRate(-0.5), -turnRate(0.5));
-  assert.ok(Math.abs(turnRate(1) - 1.3) < 1e-9);
+  assert.ok(Math.abs(turnRate(1) - 2.4) < 1e-9); // full maxRate at the edge
+  // halfway push must already give a meaningful fraction of max (was the
+  // "sluggish" complaint: squared curve gave only ~0.25 here)
+  assert.ok(turnRate(0.5) / 2.4 > 0.28);
 });
 
 test('approachSpeed: brakes to zero at arrival, capped at max', () => {

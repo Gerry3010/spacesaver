@@ -1,11 +1,14 @@
 // Pure math for Explore mode — three-free, unit-tested.
 
-/** Pointer position (-1..1) → turn rate with a center deadzone (rad/s). */
-export function turnRate(n, deadzone = 0.16, maxRate = 1.3) {
+/** Pointer position (-1..1) → turn rate with a small center deadzone (rad/s).
+ *  Blended linear+quadratic response: still eased right around the center
+ *  (no jitter) but climbs fast — pushing halfway already gives real turn rate. */
+export function turnRate(n, deadzone = 0.09, maxRate = 2.4) {
   const a = Math.abs(n);
   if (a <= deadzone) return 0;
   const t = Math.min((a - deadzone) / (1 - deadzone), 1);
-  return Math.sign(n) * t * t * maxRate; // squared: gentle near center
+  const shaped = t * (0.45 + 0.55 * t); // 0.45·linear + 0.55·squared, =1 at edge
+  return Math.sign(n) * shaped * maxRate;
 }
 
 /** Autopilot braking curve: fast far out, zero at arrival distance. */

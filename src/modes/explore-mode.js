@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import systemsData from '../data/systems.json';
 import { buildSystem } from '../world/planet-factory.js';
 import { ExploreHud } from '../ui/explore-hud.js';
-import { turnRate, approachSpeed, angleDelta, systemPosition } from '../game/explore-math.js';
+import { turnRate, approachSpeed, angleDelta, systemPosition, starColorHex } from '../game/explore-math.js';
 
 // Explore: ~26 real star systems floating in one big volume. Pick a target
 // from the list (L), the autopilot flies you there and brakes; look around
@@ -46,10 +46,23 @@ export const exploreMode = {
     this.raycaster.far = 700;
     this.hud = new ExploreHud();
     this.hud.onSelect = (i) => this._flyTo(i);
+    this.hud.onTeleport = (i) => this._teleport(i);
+    this.hud.setMapData(this.systems.map((s) => ({
+      host: s.sys.host,
+      x: s.pos.x,
+      z: s.pos.z,
+      colorHex: starColorHex(s.sys.teff),
+      planets: s.sys.planets.length,
+    })));
     this.visited = new Set();
     this.worldPos = new THREE.Vector3();
     this.heading = new THREE.Quaternion();
     this._euler = new THREE.Euler(0, 0, 0, 'YXZ');
+
+    // "charted space" edge: just beyond the furthest star system
+    let far = 0;
+    for (const s of this.systems) far = Math.max(far, s.pos.length() + s.arrive);
+    this.edge = far + 900;
   },
 
   enter(ctx) {
@@ -80,19 +93,37 @@ export const exploreMode = {
     this.hud.renderList(systemsData.systems, this.visited, i);
   },
 
+  /** Instant jump from the star map: drop in just outside the star, facing it. */
+  _teleport(i) {
+    const t = this.systems[i];
+    _dir.set(0, t.starR * 1.6, t.arrive + 30); // offset from the star
+    this.worldPos.copy(t.pos).add(_dir);
+    _dir.copy(t.pos).sub(this.worldPos).normalize();
+    this.yaw = Math.atan2(-_dir.x, -_dir.z);
+    this.pitch = Math.asin(THREE.MathUtils.clamp(_dir.y, -1, 1));
+    this.throttle = 0;
+    this.autopilot = null;
+    this.visited.add(t.sys.host);
+    this.hud.renderList(systemsData.systems, this.visited, -1);
+  },
+
   update(dt, ctx) {
     const { world, input } = ctx;
 
+    // the star map is a modal overlay: freeze steering/throttle/gaze while it's
+    // open (the mouse is picking a target, not flying), but keep the world alive
+    const mapOpen = this.hud.mapOpen;
+
     // throttle
-    const wheel = input.consumeWheel();
+    const wheel = mapOpen ? 0 : input.consumeWheel();
     if (wheel !== 0) {
       this.throttle = THREE.MathUtils.clamp(this.throttle - wheel * 0.0005, 0, 1);
       if (this.autopilot) this.autopilot = null; // manual override
     }
 
-    // steering
-    const yawRate = -turnRate(input.nx);
-    const pitchRate = turnRate(input.ny);
+    // steering (suppressed while the map is open)
+    const yawRate = mapOpen ? 0 : -turnRate(input.nx);
+    const pitchRate = mapOpen ? 0 : turnRate(input.ny);
     let speed;
 
     if (this.autopilot) {
@@ -102,8 +133,8 @@ export const exploreMode = {
       _dir.normalize();
       const wantYaw = Math.atan2(-_dir.x, -_dir.z);
       const wantPitch = Math.asin(THREE.MathUtils.clamp(_dir.y, -1, 1));
-      this.yaw += THREE.MathUtils.clamp(angleDelta(this.yaw, wantYaw), -1.1 * dt, 1.1 * dt);
-      this.pitch += THREE.MathUtils.clamp(angleDelta(this.pitch, wantPitch), -1.1 * dt, 1.1 * dt);
+      this.yaw += THREE.MathUtils.clamp(angleDelta(this.yaw, wantYaw), -2.2 * dt, 2.2 * dt);
+      this.pitch += THREE.MathUtils.clamp(angleDelta(this.pitch, wantPitch), -2.2 * dt, 2.2 * dt);
       speed = approachSpeed(dist, t.arrive, MAX_SPEED);
       if (yawRate !== 0 || pitchRate !== 0) {
         this.autopilot = null; // player takes the stick
@@ -142,21 +173,36 @@ export const exploreMode = {
 
     // shared star light follows the nearest system
     let nearest = null;
+    let nearestIdx = -1;
     let best = Infinity;
-    for (const s of this.systems) {
-      const d = s.pos.distanceToSquared(this.worldPos);
+    for (let i = 0; i < this.systems.length; i++) {
+      const d = this.systems[i].pos.distanceToSquared(this.worldPos);
       if (d < best) {
         best = d;
-        nearest = s;
+        nearest = this.systems[i];
+        nearestIdx = i;
       }
     }
     this.starLight.position.copy(nearest.pos);
 
     this.hud.setThrottle(this.autopilot ? speed / MAX_SPEED : this.throttle, speed);
 
-    // gaze info (center raycast, throttled)
+    // boundary: warn past the charted-space edge; if you keep going far beyond
+    // it, quietly engage the autopilot back to the nearest system (no lost ships)
+    const fromOrigin = this.worldPos.length();
+    if (fromOrigin > this.edge) {
+      this.hud.setWarning(true, fromOrigin, this.edge);
+      if (fromOrigin > this.edge * 1.6 && !this.autopilot) this._flyTo(nearestIdx);
+    } else {
+      this.hud.setWarning(false);
+    }
+
+    // feed the map (redraws only while open)
+    this.hud.setShip(this.worldPos.x, this.worldPos.z, this.yaw);
+
+    // gaze info (center raycast, throttled) — paused while the map is open
     this.gazeCooldown -= dt;
-    if (this.gazeCooldown <= 0) {
+    if (!mapOpen && this.gazeCooldown <= 0) {
       this.gazeCooldown = 0.12;
       this.raycaster.setFromCamera(_center, world.camera);
       const hit = this.raycaster.intersectObjects(this.gazeTargets, false)[0];

@@ -53,11 +53,20 @@
       <div id="crosshair"></div>
       <div id="throttle"><div id="throttle-fill"></div></div>
       <span id="throttle-label"></span>
-      <div id="explore-hint"><kbd>L</kbd> targets &middot; scroll = throttle &middot; push cursor to turn</div>
+      <div id="explore-hint"><kbd>L</kbd> targets &middot; <kbd>M</kbd> map &middot; scroll = throttle &middot; push cursor to turn</div>
       <div id="info-panel"></div>
+      <div id="explore-warning" hidden>
+        <strong>Leaving charted space</strong>
+        <span id="warning-dist"></span>
+        <em>press <kbd>M</kbd> to jump back to a system</em>
+      </div>
       <div id="target-list">
         <h2>Systems</h2>
         <div id="target-rows"></div>
+      </div>
+      <div id="map-overlay" hidden>
+        <div id="map-head"><h2>Star map</h2><span class="map-hint">click a system to jump &middot; <kbd>M</kbd> to close</span></div>
+        <canvas id="map-canvas" width="900" height="640"></canvas>
       </div>
     </div>
     <div id="debug"></div>

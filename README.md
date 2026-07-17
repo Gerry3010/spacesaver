@@ -24,12 +24,17 @@ files), vanilla JS, bundled by esbuild.
   exoplanet systems (TRAPPIST-1, Kepler-90, Proxima Cen, HR 8799, …) with 87
   planets, data from the NASA Exoplanet Archive (`scripts/fetch-systems.mjs`
   regenerates `src/data/systems.json`; committed, so runtime stays offline).
-  Push the cursor away from center to turn, scroll wheel = throttle (0 =
-  stop and read), `L` opens the target list — the autopilot flies you there
-  and brakes. Gazing at a planet or star (center crosshair) shows its real
-  data. Planets spin on their own axis only; distances are deliberately
-  compact. No idle timeout here. Hidden on touch devices (needs mouse-look;
-  own control scheme deferred). Multi-display sync doesn't cover Explore yet.
+  Push the cursor away from center to turn (snappy — small deadzone, blended
+  linear/quadratic response), scroll wheel = throttle (0 = stop and read),
+  `L` opens the target list — the autopilot flies you there and brakes.
+  `M` opens a top-down **star map**: click any system to jump straight to it
+  (drops you just outside the star, facing it). Gazing at a planet or star
+  (center crosshair) shows its real data. Planets spin on their own axis only;
+  distances are deliberately compact. No idle timeout here. Fly past the last
+  systems and a "leaving charted space" warning appears; keep going and the
+  autopilot quietly turns you back toward the nearest system. Hidden on touch
+  devices (needs mouse-look; own control scheme deferred). Multi-display sync
+  doesn't cover Explore yet.
 
 Keys: `F` = fullscreen, `ESC` = pause menu (resume / restart / fullscreen /
 mode select / demo — registered modes appear there automatically via

@@ -18,14 +18,27 @@ export class ExploreHud {
       info: document.getElementById('info-panel'),
       list: document.getElementById('target-list'),
       rows: document.getElementById('target-rows'),
+      warning: document.getElementById('explore-warning'),
+      warningDist: document.getElementById('warning-dist'),
+      map: document.getElementById('map-overlay'),
+      mapCanvas: document.getElementById('map-canvas'),
     };
-    this.onSelect = null; // set by the mode
+    this.onSelect = null;   // fly-to (target list), set by the mode
+    this.onTeleport = null; // instant jump (map), set by the mode
     this._infoKey = null;
+    this._warnOn = false;
+    this.mapOpen = false;   // mode reads this to suppress steering/gaze
+    this._mapData = null;   // [{host, x, z, colorHex, planets}]
+    this._mapHits = [];     // per-dot canvas hit boxes, rebuilt each draw
+    this._ship = { x: 0, z: 0, yaw: 0 };
+    this._ctx = this.el.mapCanvas.getContext('2d');
     this._keyHandler = (e) => {
-      if ((e.key === 'l' || e.key === 'L') && !document.body.classList.contains('paused')) {
-        this.toggleList();
-      }
+      if (document.body.classList.contains('paused')) return;
+      if (e.key === 'l' || e.key === 'L') this.toggleList();
+      else if (e.key === 'm' || e.key === 'M') this.toggleMap();
     };
+    this._mapClick = (e) => this._onMapClick(e);
+    this.el.map.addEventListener('click', this._mapClick);
   }
 
   setActive(on) {
@@ -35,6 +48,8 @@ export class ExploreHud {
     if (!on) {
       this.hideInfo();
       this.el.list.classList.remove('on');
+      this.closeMap();
+      this.setWarning(false);
     }
   }
 
@@ -104,5 +119,137 @@ export class ExploreHud {
   hideInfo() {
     this._infoKey = null;
     this.el.info.classList.remove('on');
+  }
+
+  /** Boundary warning banner. `dist`/`edge` in world units (rounded to k-units). */
+  setWarning(on, dist, edge) {
+    if (on && dist != null) {
+      this.el.warningDist.textContent =
+        `${(dist / 1000).toFixed(1)}k u out · edge at ${(edge / 1000).toFixed(1)}k`;
+    }
+    if (on === this._warnOn) return;
+    this._warnOn = on;
+    this.el.warning.hidden = !on;
+  }
+
+  // ---- star map ----
+
+  /** One-time system layout for the map: [{host, x, z, colorHex, planets}]. */
+  setMapData(entries) {
+    this._mapData = entries;
+    // fit all systems (+ origin) into the canvas with padding
+    let max = 500;
+    for (const e of entries) max = Math.max(max, Math.abs(e.x), Math.abs(e.z));
+    this._mapSpan = max * 1.12;
+  }
+
+  /** Ship pose in world space, pushed each frame by the mode (cheap). */
+  setShip(x, z, yaw) {
+    this._ship.x = x;
+    this._ship.z = z;
+    this._ship.yaw = yaw;
+    if (this.mapOpen) this._drawMap();
+  }
+
+  toggleMap() {
+    if (this.mapOpen) this.closeMap();
+    else this.openMap();
+  }
+
+  openMap() {
+    if (!this._mapData) return;
+    this.mapOpen = true;
+    this.el.map.hidden = false;
+    this.el.list.classList.remove('on');
+    this._drawMap();
+  }
+
+  closeMap() {
+    this.mapOpen = false;
+    this.el.map.hidden = true;
+  }
+
+  _worldToCanvas(x, z) {
+    const c = this.el.mapCanvas;
+    const s = (Math.min(c.width, c.height) * 0.5 - 28) / this._mapSpan;
+    return [c.width / 2 + x * s, c.height / 2 + z * s];
+  }
+
+  _drawMap() {
+    const ctx = this._ctx;
+    const c = this.el.mapCanvas;
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    // faint range rings around origin (every 1000 u)
+    ctx.strokeStyle = 'rgba(125, 245, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let r = 1000; r <= this._mapSpan; r += 1000) {
+      const [cx, cy] = this._worldToCanvas(0, 0);
+      const [ex] = this._worldToCanvas(r, 0);
+      ctx.beginPath();
+      ctx.arc(cx, cy, ex - cx, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // system dots
+    this._mapHits = [];
+    ctx.textAlign = 'center';
+    ctx.font = '11px "DejaVu Sans Mono", monospace';
+    this._mapData.forEach((e, i) => {
+      const [px, py] = this._worldToCanvas(e.x, e.z);
+      const rad = 3 + Math.min(e.planets, 8) * 0.7;
+      const hex = '#' + e.colorHex.toString(16).padStart(6, '0');
+      ctx.beginPath();
+      ctx.arc(px, py, rad, 0, Math.PI * 2);
+      ctx.fillStyle = hex;
+      ctx.shadowColor = hex;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(223, 246, 255, 0.72)';
+      ctx.fillText(e.host, px, py - rad - 5);
+      this._mapHits.push({ x: px, y: py, i });
+    });
+
+    // ship marker + heading arrow
+    const [sx, sy] = this._worldToCanvas(this._ship.x, this._ship.z);
+    const fx = -Math.sin(this._ship.yaw);
+    const fz = -Math.cos(this._ship.yaw);
+    ctx.strokeStyle = '#ffd166';
+    ctx.fillStyle = '#ffd166';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + fx * 22, sy + fz * 22);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  _onMapClick(e) {
+    if (e.target !== this.el.mapCanvas) {
+      // click outside the canvas (on the dim backdrop) closes the map
+      this.closeMap();
+      return;
+    }
+    const rect = this.el.mapCanvas.getBoundingClientRect();
+    const scaleX = this.el.mapCanvas.width / rect.width;
+    const scaleY = this.el.mapCanvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+    let best = null;
+    let bestD = 22 * 22; // click tolerance (canvas px, squared)
+    for (const h of this._mapHits) {
+      const d = (h.x - mx) ** 2 + (h.y - my) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = h.i;
+      }
+    }
+    if (best != null) {
+      this.closeMap();
+      this.onTeleport?.(best);
+    }
   }
 }
