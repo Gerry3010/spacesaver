@@ -115,6 +115,9 @@ const menu = new Menu({
 
 input.onEscape = () => setPaused(!paused);
 
+// on-screen pause button (top-left) — same as pressing ESC
+document.getElementById('pause-btn')?.addEventListener('click', () => setPaused(!paused));
+
 // browsers swallow ESC in fullscreen to exit it — treat that exit as the
 // menu request it was (F key / button exits pass through silently)
 document.addEventListener('fullscreenchange', () => {

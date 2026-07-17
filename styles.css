@@ -535,3 +535,27 @@ body.paused { cursor: default !important; }
 }
 body:not(.idle) #fs-btn { opacity: 0.65; }
 #fs-btn:hover { background: rgba(125, 245, 255, 0.15); opacity: 1; }
+
+/* ---- pause button (top-left, opens the menu) ---- */
+#pause-btn {
+  position: fixed;
+  top: 22px;
+  left: 26px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(125, 245, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(6, 12, 26, 0.5);
+  color: var(--cyan);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.4s ease, background 0.2s ease;
+}
+body:not(.idle) #pause-btn { opacity: 0.65; }
+#pause-btn:hover { background: rgba(125, 245, 255, 0.15); opacity: 1; }
+/* hide while the menu is up (Resume lives in the menu) and on follower screens */
+body.paused #pause-btn,
+body.follower #pause-btn { display: none !important; }
