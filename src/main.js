@@ -67,17 +67,17 @@ const syncIn = syncRole === 'follow'
 const syncOut = syncRole === 'master' ? new SyncChannel('master') : null;
 if (syncRole === 'follow') document.body.classList.add('follower');
 
-// ---- demo pilot (?demo=coin-rush or the menu button) ----
+// ---- demo pilot (?demo=coin-rush | ?demo=explore, or the menu button) ----
+// In demo the mouse never takes over the game — it's a hands-off showcase you
+// leave through the ESC menu. coin-rush is driven by a synthetic pilot below;
+// explore runs its own autonomous star tour (see explore-mode).
 let demoActive = false;
-function startDemo() {
+function startDemo(modeId = 'coin-rush') {
   demoActive = true;
-  input.moveAcc = 0; // real mouse movement from here on ends the demo
-  modeManager.switchTo('coin-rush');
+  modeManager.switchTo(modeId);
 }
-// ?demo=coin-rush → synthetic pilot; ?demo=explore (+&goto=<host>) → jump
-// straight into a mode without the pilot override
 const demoParam = params.get('demo');
-if (demoParam === 'coin-rush') startDemo();
+if (demoParam === 'coin-rush' || demoParam === 'explore') startDemo(demoParam);
 else if (demoParam) modeManager.switchTo(demoParam);
 
 // ---- ESC / pause menu ----
@@ -108,7 +108,8 @@ const menu = new Menu({
     setPaused(false);
   },
   onDemo: () => {
-    startDemo();
+    // demo whatever mode you're in (idle/game-over falls back to coin-rush)
+    startDemo(modeManager.current.id === 'explore' ? 'explore' : 'coin-rush');
     setPaused(false);
   },
 });
@@ -154,7 +155,6 @@ engine.start((dt) => {
     input.lastActivity = world.time;
   }
   input.update(dt, world.time);
-  if (demoActive && input.moveAcc > 12) demoActive = false; // player takes over
 
   if (paused) {
     world.scenicUpdate(dt);

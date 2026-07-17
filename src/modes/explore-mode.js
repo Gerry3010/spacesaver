@@ -72,9 +72,12 @@ export const exploreMode = {
     this.yaw = 0;
     this.pitch = 0;
     this.worldPos.set(0, 10, 330);
-    this.throttle = 0.25;
+    // demo hovers at Sol first (throttle 0) before the tour picks it up
+    this.throttle = ctx.isDemo?.() ? 0 : 0.25;
     this.autopilot = null;
     this.gazeCooldown = 0;
+    this.tourWait = 0;
+    this.nearestIdx = 0;
     this.visited.add('Sol');
     ctx.hud.setPlaying(false);
     this.hud.setActive(true);
@@ -107,23 +110,45 @@ export const exploreMode = {
     this.hud.renderList(systemsData.systems, this.visited, -1);
   },
 
+  /** Demo tour: head to the nearest system we haven't shown yet, loop forever. */
+  _tourNext() {
+    this.tourWait = 0;
+    let bestI = -1;
+    let best = Infinity;
+    for (let i = 0; i < this.systems.length; i++) {
+      if (this.visited.has(this.systems[i].sys.host)) continue;
+      const d = this.systems[i].pos.distanceToSquared(this.worldPos);
+      if (d < best) { best = d; bestI = i; }
+    }
+    if (bestI < 0) {
+      // seen them all — reset and start a fresh loop from where we are
+      this.visited.clear();
+      this.visited.add(this.systems[this.nearestIdx].sys.host);
+      bestI = this.nearestIdx;
+    }
+    this._flyTo(bestI);
+  },
+
   update(dt, ctx) {
     const { world, input } = ctx;
 
     // the star map is a modal overlay: freeze steering/throttle/gaze while it's
-    // open (the mouse is picking a target, not flying), but keep the world alive
+    // open (the mouse is picking a target, not flying), but keep the world alive.
+    // demo does the same — it's a hands-off tour, the mouse must not hijack it.
     const mapOpen = this.hud.mapOpen;
+    const demo = ctx.isDemo?.();
+    const locked = mapOpen || demo;
 
     // throttle
-    const wheel = mapOpen ? 0 : input.consumeWheel();
+    const wheel = locked ? 0 : input.consumeWheel();
     if (wheel !== 0) {
       this.throttle = THREE.MathUtils.clamp(this.throttle - wheel * 0.0005, 0, 1);
       if (this.autopilot) this.autopilot = null; // manual override
     }
 
-    // steering (suppressed while the map is open)
-    const yawRate = mapOpen ? 0 : -turnRate(input.nx);
-    const pitchRate = mapOpen ? 0 : turnRate(input.ny);
+    // steering (suppressed while the map is open or in demo)
+    const yawRate = locked ? 0 : -turnRate(input.nx);
+    const pitchRate = locked ? 0 : turnRate(input.ny);
     let speed;
 
     if (this.autopilot) {
@@ -184,6 +209,13 @@ export const exploreMode = {
       }
     }
     this.starLight.position.copy(nearest.pos);
+    this.nearestIdx = nearestIdx;
+
+    // demo: fly to a system, pause ~4s to admire, then move to the next one
+    if (demo) {
+      if (this.autopilot) this.tourWait = 0;
+      else if ((this.tourWait += dt) > 4) this._tourNext();
+    }
 
     this.hud.setThrottle(this.autopilot ? speed / MAX_SPEED : this.throttle, speed);
 
