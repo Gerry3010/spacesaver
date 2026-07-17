@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="spacesaver">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1a3c"/>
+      <stop offset="1" stop-color="#050a1a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.62" r="0.6">
+      <stop offset="0" stop-color="#1a3f7a" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#1a3f7a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hull" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8faff"/>
+      <stop offset="0.45" stop-color="#7df5ff"/>
+      <stop offset="1" stop-color="#2b7fa8"/>
+    </linearGradient>
+    <linearGradient id="cockpit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#4bd6ef"/>
+    </linearGradient>
+    <radialGradient id="engine" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff3c9"/>
+      <stop offset="0.35" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="108" fill="url(#glow)"/>
+
+  <!-- stars -->
+  <g fill="#ffffff">
+    <circle cx="96"  cy="118" r="4" opacity="0.9"/>
+    <circle cx="418" cy="150" r="5" opacity="0.85"/>
+    <circle cx="150" cy="330" r="3" opacity="0.7"/>
+    <circle cx="392" cy="372" r="4" opacity="0.75"/>
+    <circle cx="360" cy="90"  r="3" opacity="0.6"/>
+    <circle cx="120" cy="230" r="2.5" opacity="0.55"/>
+    <circle cx="440" cy="300" r="2.5" opacity="0.6"/>
+  </g>
+
+  <!-- engine bloom -->
+  <circle cx="256" cy="404" r="70" fill="url(#engine)"/>
+
+  <!-- exhaust streaks -->
+  <g fill="url(#engine)" opacity="0.85">
+    <path d="M238 396 q-10 60 4 96 q14 -36 4 -96 z"/>
+    <path d="M274 396 q10 60 -4 96 q-14 -36 -4 -96 z"/>
+  </g>
+
+  <!-- ship -->
+  <g filter="url(#soft)" opacity="0.55">
+    <path d="M256 104 C300 156 330 244 396 372 L300 344 L256 392 L212 344 L116 372 C182 244 212 156 256 104 Z" fill="#7df5ff"/>
+  </g>
+  <path d="M256 104 C300 156 330 244 396 372 L300 344 L256 392 L212 344 L116 372 C182 244 212 156 256 104 Z"
+        fill="url(#hull)" stroke="#eafeff" stroke-width="4" stroke-linejoin="round"/>
+  <!-- keel highlight -->
+  <path d="M256 118 L256 372" stroke="#eafeff" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+  <!-- cockpit -->
+  <ellipse cx="256" cy="206" rx="26" ry="46" fill="url(#cockpit)"/>
+</svg>

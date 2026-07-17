@@ -1,0 +1,15 @@
+{
+  "name": "spacesaver",
+  "short_name": "spacesaver",
+  "description": "Fancy 3D space screensaver that turns into an arcade game the moment you move the mouse.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050a1a",
+  "theme_color": "#060b1c",
+  "icons": [
+    { "src": "/icons/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icons/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icons/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}
