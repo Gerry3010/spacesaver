@@ -5,13 +5,14 @@ import { toggleFullscreen } from '../core/input.js';
 
 export class Menu {
   /**
-   * @param {object} handlers { onResume(), onRestart(), onSelectMode(id) }
+   * @param {object} handlers { onResume(), onRestart(), onSelectMode(id), onDemo() }
    */
   constructor(handlers) {
     this.handlers = handlers;
     this.modesEl = document.getElementById('menu-modes');
     document.getElementById('menu-resume').addEventListener('click', () => handlers.onResume());
     document.getElementById('menu-restart').addEventListener('click', () => handlers.onRestart());
+    document.getElementById('menu-demo').addEventListener('click', () => handlers.onDemo());
     document.getElementById('menu-fullscreen').addEventListener('click', () => toggleFullscreen());
     // click on the backdrop (outside the panel) resumes too
     document.getElementById('menu').addEventListener('click', (e) => {

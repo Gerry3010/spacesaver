@@ -2,6 +2,7 @@ import { CONFIG } from '../core/config.js';
 import { CoinField, AsteroidField } from '../game/entities.js';
 import { Spawner } from '../game/spawner.js';
 import { ellipsoidHit } from '../game/collision.js';
+import { steeringCurve } from '../game/steering.js';
 import { worldSpeed } from '../game/difficulty.js';
 
 // The arcade game: mouse steering, catch coins, dodge asteroids.
@@ -11,7 +12,6 @@ export const coinRushMode = {
   id: 'coin-rush',
   label: 'Coin Rush',
   coins: null,
-  _aim: { x: 0, y: 0 },
 
   _init(ctx) {
     if (this.coins) return;
@@ -64,9 +64,14 @@ export const coinRushMode = {
     this.elapsed += dt;
     world.speed += (worldSpeed(this.elapsed) - world.speed) * Math.min(dt * 1.5, 1);
 
-    // aim the ship at the point under the cursor (setTarget clamps to corridor)
-    world.pointerToCorridor(input.nx, input.ny, this._aim);
-    world.ship.setTarget(this._aim.x, this._aim.y);
+    // power-curve steering: precise around the center, expansive toward the
+    // edges — pointer at the screen border pins the ship to the corridor edge
+    const st = CONFIG.steering;
+    const c = CONFIG.corridor;
+    world.ship.setTarget(
+      steeringCurve(input.nx, st.exponent) * c.x * st.overshoot,
+      steeringCurve(input.ny, st.exponent) * c.y * st.overshoot
+    );
 
     this.spawner.update(dt, this.elapsed);
 

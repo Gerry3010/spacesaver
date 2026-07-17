@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
+import { mulberry32 } from '../core/rng.js';
 
 // Star positions are static; the vertex shader wraps them around the camera
 // with mod() as uScroll grows. Infinity for free, zero CPU work, 3 draw calls.
@@ -46,24 +47,26 @@ function starColor(rand) {
 }
 
 export class Starfield {
-  constructor(scene) {
+  constructor(scene, worldSeed = 1337) {
     this.layers = [];
+    let layerIdx = 0;
     for (const layer of CONFIG.stars.layers) {
+      const rng = mulberry32(worldSeed + layerIdx++ * 7919);
       const geo = new THREE.BufferGeometry();
       const pos = new Float32Array(layer.count * 3);
       const size = new Float32Array(layer.count);
       const color = new Float32Array(layer.count * 3);
       const seed = new Float32Array(layer.count);
       for (let i = 0; i < layer.count; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * layer.box;
-        pos[i * 3 + 1] = (Math.random() - 0.5) * layer.box;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * layer.box;
-        size[i] = layer.size * (0.5 + Math.random());
-        const [r, g, b] = starColor(Math.random());
+        pos[i * 3] = (rng() - 0.5) * layer.box;
+        pos[i * 3 + 1] = (rng() - 0.5) * layer.box;
+        pos[i * 3 + 2] = (rng() - 0.5) * layer.box;
+        size[i] = layer.size * (0.5 + rng());
+        const [r, g, b] = starColor(rng());
         color[i * 3] = r;
         color[i * 3 + 1] = g;
         color[i * 3 + 2] = b;
-        seed[i] = Math.random();
+        seed[i] = rng();
       }
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
@@ -91,9 +94,10 @@ export class Starfield {
     }
   }
 
-  update(dt, speed, time) {
+  /** Pure function of total scrolled distance — sync-friendly across windows. */
+  update(scroll, time) {
     for (const l of this.layers) {
-      l.mat.uniforms.uScroll.value += speed * l.parallax * dt;
+      l.mat.uniforms.uScroll.value = scroll * l.parallax;
       l.mat.uniforms.uTime.value = time;
     }
   }

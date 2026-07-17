@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 import { IndexPool } from './pool.js';
+import { mulberry32 } from '../core/rng.js';
 
 const _dummy = new THREE.Object3D();
 const _hidden = new THREE.Matrix4().makeScale(0, 0, 0);
@@ -89,6 +90,7 @@ export class AsteroidField {
     this.rvx = new Float32Array(n);
     this.rvy = new Float32Array(n);
 
+    const rng = mulberry32(4242); // same rock shape in every window
     const geo = new THREE.IcosahedronGeometry(1, 1).toNonIndexed();
     const pos = geo.attributes.position;
     const v = new THREE.Vector3();
@@ -98,7 +100,7 @@ export class AsteroidField {
       const key = `${v.x.toFixed(3)},${v.y.toFixed(3)},${v.z.toFixed(3)}`;
       let f = seen.get(key);
       if (f === undefined) {
-        f = 1 + (Math.random() - 0.5) * 0.55;
+        f = 1 + (rng() - 0.5) * 0.55;
         seen.set(key, f);
       }
       v.multiplyScalar(f);

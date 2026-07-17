@@ -11,18 +11,39 @@ files), vanilla JS, bundled by esbuild.
 
 - **Idle (screensaver):** autopilot drifts through space on layered sine
   curves. After a while a hint fades in.
-- **Coin Rush (game):** move the mouse → the ship follows the cursor
-  (unprojected onto the flight plane, so it sits under the pointer).
-  Catch gold rings (combo multiplier for chains), dodge asteroids
-  (3 lives, brief invulnerability after a hit). Game over → score + best
-  (localStorage) → back to the screensaver. Stop moving for ~6 s → the game
-  fades back into the screensaver too.
+- **Coin Rush (game):** move the mouse/finger → the ship follows via a power
+  steering curve (`|n|^1.6`, `src/game/steering.js`): precise around the
+  center, expansive toward the edges — pointer at the screen border pins the
+  ship to the corridor border on any screen or aspect (mobile included; try
+  exponents live with `?steer=2`). Catch gold rings (combo multiplier for
+  chains), dodge asteroids (3 lives, brief invulnerability after a hit).
+  Game over → score + best (localStorage) → back to the screensaver. Stop
+  moving for ~6 s → the game fades back into the screensaver too.
 
 Keys: `F` = fullscreen, `ESC` = pause menu (resume / restart / fullscreen /
-mode select — registered modes appear there automatically via `mode.label`;
-the game clock freezes while the menu is open). `?debug=1` = fps/draw-call overlay + `window.__spacesaver`
-handle. `?demo=coin-rush` = synthetic pilot (for headless screenshots/tuning —
-the mouse does nothing in demo mode).
+mode select / demo — registered modes appear there automatically via
+`mode.label`; the game clock freezes while the menu is open; exiting
+fullscreen with ESC opens the menu too). `?debug=1` = fps/draw-call overlay +
+`window.__spacesaver` handle. `?demo=coin-rush` = synthetic pilot; moving the
+mouse takes over seamlessly.
+
+## Multi-display
+
+`multi.html` opens one synced window per screen (Chrome window-management
+permission): the first is the **master** (input, game, HUD), the rest are
+**followers** rendering the same world through a view offset — together they
+form one continuous view across all displays. Plumbing:
+
+- `?view=x,y,W,H` — render the sub-rect at (x, y) of a virtual W×H canvas
+  (`camera.setViewOffset`)
+- `?sync=master|follow` — state sync over `BroadcastChannel`
+  (`src/core/sync.js`): ship pose + clocks travel, everything else is
+  deterministic `f(scroll)` from a shared seed (`src/core/rng.js`)
+- followers hide HUD/menu; coins/asteroids currently render on the master's
+  simulation only (game entities aren't synced yet — the screensaver is)
+
+This is also the base for a native macOS screensaver wrapper (one
+ScreenSaverView per display → one URL with matching `view`/`sync` params).
 
 ## Dev
 

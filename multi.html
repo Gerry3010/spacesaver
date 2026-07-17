@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>spacesaver — Multi-Display</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #04060f;
+      color: #7df5ff;
+      font-family: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+    }
+    main {
+      max-width: 560px;
+      padding: 44px;
+      border: 1px solid rgba(125, 245, 255, 0.3);
+      border-radius: 14px;
+      background: rgba(8, 14, 30, 0.8);
+      text-align: center;
+    }
+    h1 { letter-spacing: 0.3em; text-transform: uppercase; font-size: 26px; margin-bottom: 18px; }
+    p { color: rgba(180, 210, 230, 0.75); line-height: 1.6; margin-bottom: 14px; }
+    button {
+      font: inherit;
+      font-size: 18px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 13px 30px;
+      margin-top: 10px;
+      color: #7df5ff;
+      background: rgba(20, 50, 80, 0.3);
+      border: 1px solid rgba(125, 245, 255, 0.4);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background: rgba(125, 245, 255, 0.15); }
+    #status { margin-top: 16px; font-size: 14px; color: rgba(180, 210, 230, 0.6); }
+    kbd { color: #ffd166; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Multi-Display</h1>
+    <p>Öffnet pro Bildschirm ein synchronisiertes Fenster — eine zusammenhängende
+       Weltansicht über alle Displays. Das Fenster auf dem ersten Bildschirm ist
+       der Master (dort läuft Steuerung &amp; Spiel), die anderen rendern mit.</p>
+    <p>Chrome fragt einmal nach der <em>Fensterverwaltungs</em>-Berechtigung.
+       Danach in jedem Fenster <kbd>F</kbd> für Vollbild drücken.</p>
+    <button id="go">Fenster öffnen</button>
+    <div id="status"></div>
+  </main>
+  <script>
+    document.getElementById('go').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      let screens = [{
+        left: screen.availLeft || 0, top: screen.availTop || 0,
+        width: screen.availWidth, height: screen.availHeight, primary: true,
+      }];
+      try {
+        if ('getScreenDetails' in window) {
+          const d = await window.getScreenDetails();
+          screens = d.screens.map(s => ({
+            left: s.availLeft, top: s.availTop,
+            width: s.availWidth, height: s.availHeight, primary: s.isPrimary,
+          }));
+        }
+      } catch (e) {
+        status.textContent = 'Keine Multi-Screen-Berechtigung — nutze nur diesen Bildschirm.';
+      }
+      screens.sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+
+      const minL = Math.min(...screens.map(s => s.left));
+      const minT = Math.min(...screens.map(s => s.top));
+      const W = Math.max(...screens.map(s => s.left + s.width)) - minL;
+      const H = Math.max(...screens.map(s => s.top + s.height)) - minT;
+
+      screens.forEach((s, i) => {
+        const role = i === 0 ? 'master' : 'follow';
+        const url = `./?sync=${role}&view=${s.left - minL},${s.top - minT},${W},${H}`;
+        window.open(
+          url,
+          `spacesaver-${i}`,
+          `left=${s.left},top=${s.top},width=${s.width},height=${s.height},popup=yes`
+        );
+      });
+      status.textContent = `${screens.length} Fenster geöffnet (virtuelle Fläche ${W}×${H}).`;
+    });
+  </script>
+</body>
+</html>

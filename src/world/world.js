@@ -9,8 +9,6 @@ import { CONFIG } from '../core/config.js';
 // The persistent base: ship gliding through infinite space.
 // Modes only add gameplay on top — the world never resets or cuts.
 
-const _ray = new THREE.Vector3();
-
 export class World {
   constructor() {
     this.scene = new THREE.Scene();
@@ -36,22 +34,10 @@ export class World {
 
     this.speed = CONFIG.idleSpeed; // world units/s flowing past the ship
     this.time = 0;
+    this.scroll = 0; // total distance flown — starfield/nebula are pure f(scroll)
     // extra per-frame updaters (entity fields register here so leftovers
     // keep drifting past even when their mode is not active)
     this.updatables = [];
-  }
-
-  /**
-   * Project the pointer (NDC -1..1) onto the ship's flight plane (z = 0),
-   * so the ship sits exactly under the cursor regardless of camera FOV,
-   * position or roll. Writes into `out` {x, y}.
-   */
-  pointerToCorridor(nx, ny, out) {
-    _ray.set(nx, ny, 0.5).unproject(this.camera).sub(this.camera.position).normalize();
-    const t = -this.camera.position.z / _ray.z;
-    out.x = this.camera.position.x + _ray.x * t;
-    out.y = this.camera.position.y + _ray.y * t;
-    return out;
   }
 
   /**
@@ -65,10 +51,10 @@ export class World {
     // get their own clock so stars keep twinkling.
     this._menuTime = (this._menuTime ?? this.time) + dt;
     const t = this._menuTime;
-    const drift = this.speed * 0.12;
+    this.scroll += this.speed * 0.12 * dt;
     this.ship.update(dt, t);
-    this.starfield.update(dt, drift, t);
-    this.nebula.update(dt, drift, t);
+    this.starfield.update(this.scroll, t);
+    this.nebula.update(this.scroll, t);
     this.trail.update(dt);
     this.rig.update(dt, this.ship);
   }
@@ -76,10 +62,11 @@ export class World {
   update(dt) {
     this._menuTime = null;
     this.time += dt;
+    this.scroll += this.speed * dt;
     for (const u of this.updatables) u(dt, this.speed);
     this.ship.update(dt, this.time);
-    this.starfield.update(dt, this.speed, this.time);
-    this.nebula.update(dt, this.speed, this.time);
+    this.starfield.update(this.scroll, this.time);
+    this.nebula.update(this.scroll, this.time);
     this.trail.emitEngine(dt, this.ship, this.speed);
     this.trail.update(dt);
     this.rig.speedFactor = THREE.MathUtils.clamp((this.speed - CONFIG.idleSpeed) / 90, 0, 1);

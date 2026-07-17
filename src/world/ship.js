@@ -170,6 +170,22 @@ export class Ship {
     this.shieldFlash = strength;
   }
 
+  /**
+   * Hard-set pose from a sync master (follower windows). No damping — at a
+   * display seam both windows must show the ship in exactly the same spot.
+   */
+  snapTo(x, y, bank, pitch) {
+    this.position.x = x;
+    this.position.y = y;
+    this.targetX = x;
+    this.targetY = y;
+    this.bank = bank;
+    this.group.rotation.z = bank;
+    this.group.rotation.x = pitch;
+    this.group.rotation.y = bank * 0.35;
+    this.group.updateMatrixWorld();
+  }
+
   setVisible(v) {
     this.group.visible = v;
   }

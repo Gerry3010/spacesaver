@@ -14,10 +14,17 @@ export class Input {
     this._pending = 0;
     this._forceActivity = false;
 
+    this._lastX = null;
+    this._lastY = null;
     window.addEventListener('pointermove', (e) => {
       this.nx = (e.clientX / window.innerWidth) * 2 - 1;
       this.ny = -((e.clientY / window.innerHeight) * 2 - 1);
-      this._pending += Math.abs(e.movementX ?? 0) + Math.abs(e.movementY ?? 0);
+      // track deltas ourselves — movementX/Y is 0/undefined for touch pointers
+      if (this._lastX !== null) {
+        this._pending += Math.abs(e.clientX - this._lastX) + Math.abs(e.clientY - this._lastY);
+      }
+      this._lastX = e.clientX;
+      this._lastY = e.clientY;
     });
     window.addEventListener('pointerdown', (e) => {
       this._forceActivity = true;
@@ -62,10 +69,23 @@ export class Input {
   }
 }
 
+let _programmaticExit = false;
+
 export function toggleFullscreen() {
   if (document.fullscreenElement) {
+    _programmaticExit = true;
     document.exitFullscreen();
   } else {
     document.documentElement.requestFullscreen().catch(() => {});
   }
+}
+
+/**
+ * True once if the last fullscreen exit was ours (F key / button) rather
+ * than the browser swallowing ESC — that case should open the pause menu.
+ */
+export function consumeProgrammaticFullscreenExit() {
+  const v = _programmaticExit;
+  _programmaticExit = false;
+  return v;
 }

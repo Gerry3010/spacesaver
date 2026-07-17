@@ -30,6 +30,10 @@ export const CONFIG = {
   spawnZ: -360,
   killZ: 25,
 
+  // pointer response: |n|^exponent — center precise, edges expansive;
+  // overshoot lets the pointer pin the ship flush against the corridor edge
+  steering: { exponent: 1.6, overshoot: 1.04 },
+
   idleSpeed: 70,
   shipScale: 0.72,
   shipRadius: 1.3,

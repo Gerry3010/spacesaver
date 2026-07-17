@@ -40,12 +40,26 @@ export class Engine {
     });
   }
 
+  /**
+   * Multi-display: this window shows the sub-rect (x, y, window-size) of a
+   * virtual canvas W×H spanning all screens. One camera frustum, sliced.
+   */
+  setView(view) {
+    this.view = view; // { x, y, W, H } in virtual-canvas CSS pixels
+    this._resize();
+  }
+
   _resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
-    this.camera.aspect = w / h;
+    if (this.view) {
+      this.camera.aspect = this.view.W / this.view.H;
+      this.camera.setViewOffset(this.view.W, this.view.H, this.view.x, this.view.y, w, h);
+    } else {
+      this.camera.aspect = w / h;
+    }
     this.camera.updateProjectionMatrix();
   }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mulberry32, hash01 } from '../core/rng.js';
 
 // Deep-space backdrop: an inverted sphere with slow-drifting fbm noise,
 // plus a handful of big additive gradient sprites drifting past for parallax.
@@ -66,8 +67,13 @@ const FRAG = /* glsl */ `
   }
 `;
 
+// sprites live in a fixed z band and wrap deterministically with scroll
+const SPRITE_FAR = -550;
+const SPRITE_SPAN = 520;
+const SPRITE_PARALLAX = 0.22;
+
 export class Nebula {
-  constructor(scene) {
+  constructor(scene, seed = 1337) {
     const geo = new THREE.SphereGeometry(900, 32, 24);
     this.mat = new THREE.ShaderMaterial({
       vertexShader: VERT,
@@ -81,7 +87,9 @@ export class Nebula {
     sphere.frustumCulled = false;
     scene.add(sphere);
 
-    // drifting glow sprites
+    // drifting glow sprites — positions are pure f(scroll), so multiple
+    // synced windows render the exact same clouds
+    const rng = mulberry32(seed * 31 + 17);
     const texture = makeGlowTexture();
     const palette = [0x6a3fa0, 0x2f7f8f, 0xa04f7f, 0x3f5fa0];
     this.sprites = [];
@@ -90,35 +98,35 @@ export class Nebula {
         map: texture,
         color: palette[i % palette.length],
         transparent: true,
-        opacity: 0.05 + Math.random() * 0.05,
+        opacity: 0.05 + rng() * 0.05,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       const s = new THREE.Sprite(mat);
-      this.resetSprite(s, true);
+      s.userData.z0 = rng() * SPRITE_SPAN;
+      const size = 140 + rng() * 180;
+      s.scale.set(size, size * (0.6 + rng() * 0.5), 1);
       s.renderOrder = -5;
       scene.add(s);
       this.sprites.push(s);
     }
   }
 
-  resetSprite(s, anywhere = false) {
-    s.position.set(
-      (Math.random() - 0.5) * 500,
-      (Math.random() - 0.5) * 280,
-      anywhere ? -80 - Math.random() * 420 : -480 - Math.random() * 60
-    );
-    const size = 140 + Math.random() * 180;
-    s.scale.set(size, size * (0.6 + Math.random() * 0.5), 1);
-  }
-
-  update(dt, speed, time) {
+  update(scroll, time) {
     this.mat.uniforms.uTime.value = time;
-    for (const s of this.sprites) {
-      s.position.z += speed * 0.22 * dt;
-      // recycle well before the camera — an additive sprite crossing the
-      // camera plane would wash out the whole frame
-      if (s.position.z > -30) this.resetSprite(s);
+    const travel = scroll * SPRITE_PARALLAX;
+    for (let i = 0; i < this.sprites.length; i++) {
+      const s = this.sprites[i];
+      const raw = s.userData.z0 + travel;
+      const cycle = Math.floor(raw / SPRITE_SPAN);
+      // z stays in [SPRITE_FAR, SPRITE_FAR + SPRITE_SPAN] — never near the
+      // camera (an additive sprite crossing it would wash out the frame);
+      // x/y re-roll per wrap cycle so the clouds don't visibly repeat
+      s.position.set(
+        (hash01(i * 12.9898 + cycle * 78.233) - 0.5) * 500,
+        (hash01(i * 39.425 + cycle * 12.345) - 0.5) * 280,
+        SPRITE_FAR + (raw - cycle * SPRITE_SPAN)
+      );
     }
   }
 }
