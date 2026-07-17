@@ -160,7 +160,9 @@ body.playing #lives { opacity: 1; }
   color: rgba(125, 245, 255, 0.28);
   transition: opacity 0.6s ease;
 }
-body.playing #watermark { opacity: 0; }
+/* watermark is the idle screensaver's mark; the moment there's activity the
+   corner belongs to the control buttons, so it fades out whenever not idle */
+body:not(.idle) #watermark { opacity: 0; }
 
 /* ---- follower windows (multi-display) render world only ---- */
 body.follower #hud > *:not(#watermark),
@@ -536,7 +538,32 @@ body.paused { cursor: default !important; }
 body:not(.idle) #fs-btn { opacity: 0.65; }
 #fs-btn:hover { background: rgba(125, 245, 255, 0.15); opacity: 1; }
 
-/* ---- pause button (top-left, opens the menu) ---- */
+/* ---- mute button (bottom-right, left of fullscreen) ---- */
+#mute-btn {
+  position: fixed;
+  bottom: 22px;
+  right: 76px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(125, 245, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(6, 12, 26, 0.5);
+  color: var(--cyan);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.4s ease, background 0.2s ease;
+}
+body:not(.idle) #mute-btn { opacity: 0.65; }
+#mute-btn:hover { background: rgba(125, 245, 255, 0.15); opacity: 1; }
+#mute-btn .slash { display: none; }
+#mute-btn.muted .wave { display: none; }
+#mute-btn.muted .slash { display: inline; }
+body.follower #mute-btn { display: none !important; }
+
+/* ---- pause button (bottom-left, opens the menu) ---- */
 #pause-btn {
   position: fixed;
   bottom: 22px;

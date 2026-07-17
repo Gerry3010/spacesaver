@@ -7,6 +7,7 @@ import { Hud } from './ui/hud.js';
 import { Menu } from './ui/menu.js';
 import { Leaderboard } from './ui/leaderboard.js';
 import { CONFIG } from './core/config.js';
+import { audio } from './core/audio.js';
 import { idleMode } from './modes/idle-mode.js';
 import { coinRushMode } from './modes/coin-rush-mode.js';
 import { exploreMode } from './modes/explore-mode.js';
@@ -116,8 +117,21 @@ const menu = new Menu({
 
 input.onEscape = () => setPaused(!paused);
 
-// on-screen pause button (top-left) — same as pressing ESC
+// on-screen pause button (bottom-left) — same as pressing ESC
 document.getElementById('pause-btn')?.addEventListener('click', () => setPaused(!paused));
+
+// mute toggle (bottom-right) — state persists in localStorage via the audio engine
+const muteBtn = document.getElementById('mute-btn');
+if (muteBtn) {
+  const renderMute = () => {
+    muteBtn.classList.toggle('muted', audio.isMuted);
+    const label = audio.isMuted ? 'Ton an' : 'Ton aus';
+    muteBtn.title = label;
+    muteBtn.setAttribute('aria-label', label);
+  };
+  muteBtn.addEventListener('click', () => { audio.toggleMute(); renderMute(); });
+  renderMute();
+}
 
 // browsers swallow ESC in fullscreen to exit it — treat that exit as the
 // menu request it was (F key / button exits pass through silently)
@@ -127,7 +141,7 @@ document.addEventListener('fullscreenchange', () => {
   }
 });
 
-if (debug) window.__spacesaver = { engine, world, input, hud, modeManager };
+if (debug) window.__spacesaver = { engine, world, input, hud, modeManager, audio };
 
 let frames = 0;
 let fpsTimer = 0;
@@ -162,6 +176,10 @@ engine.start((dt) => {
     modeManager.update(dt);
     world.update(dt);
   }
+
+  // engine hum tracks flight speed; silent while paused (followers never reach
+  // here, so secondary displays stay quiet)
+  audio.setEngine(paused ? 0 : world.speed);
 
   syncOut?.publish({
     t: world.time,

@@ -4,6 +4,7 @@ import { Spawner } from '../game/spawner.js';
 import { ellipsoidHit } from '../game/collision.js';
 import { steeringCurve } from '../game/steering.js';
 import { worldSpeed } from '../game/difficulty.js';
+import { audio } from '../core/audio.js';
 
 // The arcade game: mouse steering, catch coins, dodge asteroids.
 // GAME_OVER is a sub-state here, not a top-level mode.
@@ -97,6 +98,7 @@ export const coinRushMode = {
         this.score += 10 * mult;
         hud.setScore(this.score);
         hud.setCombo(mult);
+        audio.coin(mult);
       }
     });
     if (this.combo > 0 && world.time - this.lastCoinAt > CONFIG.comboWindow) {
@@ -138,6 +140,9 @@ export const coinRushMode = {
       this.state = 'gameover';
       this.gameOverAt = world.time;
       hud.showGameOver(this.score);
+      audio.gameOver();
+    } else {
+      audio.hit();
     }
   },
 
