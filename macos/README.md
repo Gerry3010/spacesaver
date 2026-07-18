@@ -14,6 +14,44 @@ There are **two targets** in `SpaceSaver.xcodeproj`:
 | **`SpaceSaverApp`** | `SpaceSaver.app` | ✅ **Use this.** Works fully — seamless, synced, WebGL across all displays. |
 | `SpaceSaver` | `SpaceSaver.saver` | ⚠️ Experimental. Renders **black** inside the modern screensaver sandbox — see below. |
 
+## Installation (quick start)
+
+Turn `SpaceSaver.app` into a real screensaver (shows after N minutes idle across
+every display, hides on any input). Run from the repo root:
+
+```sh
+# 1. Build the app (needs Xcode + Node)
+xcodebuild -project macos/SpaceSaver.xcodeproj -scheme SpaceSaverApp \
+  -configuration Release -derivedDataPath macos/build
+
+# 2. Install it
+cp -R macos/build/Build/Products/Release/SpaceSaver.app /Applications/
+
+# 3. Install the idle-watcher LaunchAgent (starts at login, runs in the background)
+cp macos/net.geraldhofbauer.spacesaver.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/net.geraldhofbauer.spacesaver.plist
+```
+
+The idle delay is the last argument in the plist (`--watch 300` = 5 minutes) —
+edit it and re-`bootstrap` to change it. Uninstall the watcher with:
+
+```sh
+launchctl bootout gui/$(id -u)/net.geraldhofbauer.spacesaver
+```
+
+**Heads-up — avoid overlap with the macOS screensaver.** The app is *not* the
+system screensaver, so macOS's own screensaver (System Settings → Screen Saver)
+will still trigger at its own idle time and draw on top. Either set the app's
+`--watch` delay shorter than the system one (so you normally see SpaceSaver), or
+set the macOS screensaver to **Never** so SpaceSaver is the only one. And don't
+select the experimental `SpaceSaver.saver` there — it renders black (see below).
+
+To just try it once without installing anything:
+
+```sh
+open /Applications/SpaceSaver.app     # or the built .app — shows now; any input quits
+```
+
 ## Why the standalone app (and not just a `.saver`)
 
 A `.saver` bundle is the "native" way to ship a screensaver, and it's built
@@ -44,34 +82,21 @@ source of truth — no committed 600 kB artifact.
 
 ```sh
 # from macos/
-xcodebuild -project SpaceSaver.xcodeproj -scheme SpaceSaverApp -configuration Release
-# product: build/Release/SpaceSaver.app  (or DerivedData if you build in Xcode)
+xcodebuild -project SpaceSaver.xcodeproj -scheme SpaceSaverApp -configuration Release -derivedDataPath build
+# product: build/Build/Products/Release/SpaceSaver.app  (or DerivedData if you build in Xcode)
 ```
 
 Or open `SpaceSaver.xcodeproj` in Xcode and build the **SpaceSaverApp** scheme.
 
-## Run
+## Run modes
 
 ```sh
-open build/Release/SpaceSaver.app        # show now on every display; any input quits
+open SpaceSaver.app                                    # show now on every display; any input quits
+SpaceSaver.app/Contents/MacOS/SpaceSaver --watch 300   # agent: show after 300 s idle, hide on input
 ```
 
-As a real screensaver (shows after an idle delay, hides on input):
-
-```sh
-SpaceSaver.app/Contents/MacOS/SpaceSaver --watch 300   # 300 s idle → show
-```
-
-To have that start automatically at login, install the sample LaunchAgent:
-
-```sh
-cp SpaceSaver.app /Applications/                        # or ~/Applications (fix the plist path)
-cp net.geraldhofbauer.spacesaver.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/net.geraldhofbauer.spacesaver.plist
-```
-
-Edit the `300` in the plist for a different idle delay. Unload with
-`launchctl unload …` to stop it.
+The `--watch` mode is what the LaunchAgent in [Installation](#installation-quick-start)
+runs at login — that's the "real screensaver" setup.
 
 ## Signing
 
@@ -85,8 +110,8 @@ the target's signing settings and notarize as usual — same flow as the other
 ## The `.saver` (optional)
 
 ```sh
-xcodebuild -project SpaceSaver.xcodeproj -scheme SpaceSaver -configuration Release
-cp -R build/Release/SpaceSaver.saver ~/Library/Screen\ Savers/
+xcodebuild -project SpaceSaver.xcodeproj -scheme SpaceSaver -configuration Release -derivedDataPath build
+cp -R build/Build/Products/Release/SpaceSaver.saver ~/Library/Screen\ Savers/
 ```
 
 Then pick it in **System Settings → Screen Saver**. Expect a black canvas with
