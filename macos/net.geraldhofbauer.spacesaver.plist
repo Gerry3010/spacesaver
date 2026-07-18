@@ -27,9 +27,8 @@
 	<true/>
 	<key>KeepAlive</key>
 	<true/>
-	<!-- Adaptive (not Background): lets the QoS rise to render smoothly when the
-	     screensaver shows, while staying cheap during idle-watching. -->
-	<key>ProcessType</key>
-	<string>Adaptive</string>
+	<!-- No ProcessType on purpose: Background/Adaptive throttle WKWebView's child
+	     render processes (measured ~4 fps vs ~20 fps), so leave it at the default
+	     Standard QoS band. Idle-watching is a cheap 0.5 s timer regardless. -->
 </dict>
 </plist>
