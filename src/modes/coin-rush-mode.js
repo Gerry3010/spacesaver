@@ -151,4 +151,10 @@ export const coinRushMode = {
     ctx.hud.setPlaying(false);
     ctx.hud.hideGameOver();
   },
+
+  /** Master → followers: the active coin/asteroid transforms for co-op sync. */
+  snapshot() {
+    if (!this.coins) return null;
+    return { coins: this.coins.snapshot(), rocks: this.asteroids.snapshot() };
+  },
 };

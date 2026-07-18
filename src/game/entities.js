@@ -71,6 +71,32 @@ export class CoinField {
     this.pool.releaseAll();
     this.mesh.instanceMatrix.needsUpdate = true;
   }
+
+  /** Master: flat [x,y,z,spin, …] of the active coins, for co-op sync. */
+  snapshot() {
+    const out = [];
+    this.pool.forEachActive((i) => out.push(this.x[i], this.y[i], this.z[i], this.spin[i]));
+    return out;
+  }
+
+  /** Follower: render coins from a master snapshot (read-only, no pool/collision).
+   *  `zAdd` extrapolates the z-flow between the 30Hz updates to stay smooth. */
+  renderGhost(flat, zAdd = 0) {
+    const n = flat.length >> 2;
+    for (let i = 0; i < this.mesh.count; i++) {
+      if (i < n) {
+        const o = i << 2;
+        _dummy.position.set(flat[o], flat[o + 1], flat[o + 2] + zAdd);
+        _dummy.rotation.set(0, flat[o + 3], 0);
+        _dummy.scale.setScalar(1);
+        _dummy.updateMatrix();
+        this.mesh.setMatrixAt(i, _dummy.matrix);
+      } else {
+        this.mesh.setMatrixAt(i, _hidden);
+      }
+    }
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
 }
 
 /** Tumbling rocks. One displaced icosahedron, variety from non-uniform per-instance scale. */
@@ -169,6 +195,34 @@ export class AsteroidField {
   clear() {
     this.pool.forEachActive((i) => this.mesh.setMatrixAt(i, _hidden));
     this.pool.releaseAll();
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  /** Master: flat [x,y,z,sx,sy,sz,rx,ry, …] of the active rocks, for co-op sync. */
+  snapshot() {
+    const out = [];
+    this.pool.forEachActive((i) =>
+      out.push(this.x[i], this.y[i], this.z[i],
+        this.sx[i], this.sy[i], this.sz[i], this.rx[i], this.ry[i]));
+    return out;
+  }
+
+  /** Follower: render rocks from a master snapshot (read-only). `zAdd`
+   *  extrapolates the z-flow between the 30Hz updates to stay smooth. */
+  renderGhost(flat, zAdd = 0) {
+    const n = Math.floor(flat.length / 8);
+    for (let i = 0; i < this.mesh.count; i++) {
+      if (i < n) {
+        const o = i * 8;
+        _dummy.position.set(flat[o], flat[o + 1], flat[o + 2] + zAdd);
+        _dummy.rotation.set(flat[o + 6], flat[o + 7], 0);
+        _dummy.scale.set(flat[o + 3], flat[o + 4], flat[o + 5]);
+        _dummy.updateMatrix();
+        this.mesh.setMatrixAt(i, _dummy.matrix);
+      } else {
+        this.mesh.setMatrixAt(i, _hidden);
+      }
+    }
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 }

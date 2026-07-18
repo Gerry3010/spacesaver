@@ -8,6 +8,8 @@ import { Menu } from './ui/menu.js';
 import { Leaderboard } from './ui/leaderboard.js';
 import { CONFIG } from './core/config.js';
 import { audio } from './core/audio.js';
+import { pickPointer } from './game/coop-math.js';
+import { CoinField, AsteroidField } from './game/entities.js';
 import { idleMode } from './modes/idle-mode.js';
 import { coinRushMode } from './modes/coin-rush-mode.js';
 import { exploreMode } from './modes/explore-mode.js';
@@ -27,12 +29,17 @@ engine.attach(world.scene, world.camera);
 // ?view=x,y,W,H — this window renders the sub-rect at (x, y) of a virtual
 // canvas W×H spanning all displays (see multi.html)
 const view = params.get('view');
+let viewRect = null;
 if (view) {
   const [x, y, W, H] = view.split(',').map(Number);
-  if (W > 0 && H > 0) engine.setView({ x, y, W, H });
+  if (W > 0 && H > 0) {
+    viewRect = { x, y, W, H };
+    engine.setView(viewRect);
+  }
 }
 
 const input = new Input();
+if (viewRect) input.setView(viewRect); // pointer maps to the whole playfield
 const hud = new Hud();
 
 const ctx = { world, input, hud };
@@ -62,11 +69,21 @@ ctx.isDemo = () => demoActive;
 const syncRole = params.get('sync');
 let remote = null;
 let remoteAge = 0;
+// master: the most-recent pointer a follower sent (co-op steering). activeAt is
+// stamped on the master's own clock when it arrives, so it competes fairly with
+// the master's local pointer via pickPointer.
+let remoteInput = { nx: 0, ny: 0, activeAt: -Infinity };
 const syncIn = syncRole === 'follow'
-  ? new SyncChannel('follow', (s) => { remote = s; remoteAge = 0; })
+  ? new SyncChannel('follow', { onState: (s) => { remote = s; remoteAge = 0; } })
   : null;
-const syncOut = syncRole === 'master' ? new SyncChannel('master') : null;
+const syncOut = syncRole === 'master'
+  ? new SyncChannel('master', { onInput: (i) => { remoteInput = { nx: i.nx, ny: i.ny, activeAt: world.time }; } })
+  : null;
 if (syncRole === 'follow') document.body.classList.add('follower');
+
+// followers render the master's coins/asteroids read-only (no spawner/collision)
+let ghostCoins = null;
+let ghostRocks = null;
 
 // ---- demo pilot (?demo=coin-rush | ?demo=explore, or the menu button) ----
 // In demo the mouse never takes over the game — it's a hands-off showcase you
@@ -148,13 +165,24 @@ document.addEventListener('fullscreenchange', () => {
   }
 });
 
-if (debug) window.__spacesaver = { engine, world, input, hud, modeManager, audio };
+if (debug) {
+  window.__spacesaver = {
+    engine, world, input, hud, modeManager, audio,
+    getSync: () => ({ role: syncRole, remote, remoteInput, ghostCoins, ghostRocks }),
+  };
+}
 
 let frames = 0;
 let fpsTimer = 0;
 
 engine.start((dt) => {
   if (syncRole === 'follow') {
+    // co-op: while this display's pointer is active, send it to the master so
+    // you can steer the shared ship from any screen
+    input.update(dt, world.time);
+    if (syncIn && input.idleFor() < 0.4) {
+      syncIn.publishInput({ nx: input.nx, ny: input.ny }, world.time);
+    }
     // render-only window: adopt the master's clocks and ship pose
     if (remote) {
       remoteAge += dt;
@@ -164,6 +192,20 @@ engine.start((dt) => {
       world.update(dt); // adds speed*dt back and animates everything else
       world.time = remote.t + remoteAge;
       world.ship.snapTo(remote.sx, remote.sy, remote.bank, remote.pitch);
+      // mirror the master's coins/asteroids read-only, extrapolating the z-flow
+      // between 30Hz updates so they stay smooth across the display seam
+      if (remote.ents && remote.mode === 'coin-rush') {
+        if (!ghostCoins) {
+          ghostCoins = new CoinField(world.scene);
+          ghostRocks = new AsteroidField(world.scene);
+        }
+        const zAdd = remote.speed * remoteAge;
+        ghostCoins.renderGhost(remote.ents.coins, zAdd);
+        ghostRocks.renderGhost(remote.ents.rocks, zAdd);
+      } else if (ghostCoins) {
+        ghostCoins.renderGhost([], 0);
+        ghostRocks.renderGhost([], 0);
+      }
     } else {
       world.update(dt); // no master yet: free-run
     }
@@ -177,6 +219,17 @@ engine.start((dt) => {
   }
   input.update(dt, world.time);
 
+  // co-op: if a follower's pointer is more recent than the master's own, it
+  // steers the shared ship (demo drives input itself, so leave it alone)
+  if (syncOut && !demoActive) {
+    const picked = pickPointer(
+      { nx: input.nx, ny: input.ny, activeAt: input.lastActivity },
+      remoteInput,
+    );
+    input.nx = picked.nx;
+    input.ny = picked.ny;
+  }
+
   if (paused) {
     world.scenicUpdate(dt);
   } else {
@@ -188,7 +241,7 @@ engine.start((dt) => {
   // here, so secondary displays stay quiet)
   audio.setEngine(paused ? 0 : world.speed);
 
-  syncOut?.publish({
+  syncOut?.publishState({
     t: world.time,
     scroll: world.scroll,
     speed: world.speed,
@@ -197,6 +250,7 @@ engine.start((dt) => {
     bank: world.ship.bank,
     pitch: world.ship.group.rotation.x,
     mode: modeManager.current.id,
+    ents: modeManager.current.snapshot?.() || null, // coin-rush only
   }, world.time);
 
   if (debug) {

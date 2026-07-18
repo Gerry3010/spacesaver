@@ -2,23 +2,29 @@
 // "Significant" movement uses a decaying accumulator so desk vibrations or a
 // single 1px jitter never start the game, but a real flick does immediately.
 
+import { virtualPointer } from '../game/coop-math.js';
+
 const SIGNIFICANT_PX = 8;
 
 export class Input {
   constructor() {
-    this.nx = 0; // normalized -1..1, +x right
+    this.nx = 0; // normalized -1..1 across the whole (virtual) playfield, +x right
     this.ny = 0; // normalized -1..1, +y up
     this.moveAcc = 0;
     this.lastActivity = -Infinity; // seconds on the engine clock
     this.time = 0;
     this._pending = 0;
     this._forceActivity = false;
+    // ?view offset: this window is one slice of a bigger virtual canvas, so the
+    // pointer maps to the whole playfield, not just this display (co-op play).
+    this.view = null;
 
     this._lastX = null;
     this._lastY = null;
     window.addEventListener('pointermove', (e) => {
-      this.nx = (e.clientX / window.innerWidth) * 2 - 1;
-      this.ny = -((e.clientY / window.innerHeight) * 2 - 1);
+      const v = virtualPointer(this.view, e.clientX, e.clientY, window.innerWidth, window.innerHeight);
+      this.nx = v.nx;
+      this.ny = v.ny;
       // track deltas ourselves — movementX/Y is 0/undefined for touch pointers
       if (this._lastX !== null) {
         this._pending += Math.abs(e.clientX - this._lastX) + Math.abs(e.clientY - this._lastY);
@@ -81,6 +87,11 @@ export class Input {
     const w = this._wheelAcc;
     this._wheelAcc = 0;
     return w;
+  }
+
+  /** This window's slice of the virtual playfield, so the pointer maps globally. */
+  setView(view) {
+    this.view = view;
   }
 }
 
