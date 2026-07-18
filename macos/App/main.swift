@@ -9,9 +9,11 @@ import IOKit
 // display into one seamless, in-lockstep world.
 //
 // Modes:
-//   SpaceSaver.app                 → show immediately; any input quits.
+//   SpaceSaver.app                 → playable window: shows now, moving the
+//                                     mouse starts the game (input flows to the
+//                                     page), only ⌘Q quits. NOT a screensaver.
 //   SpaceSaver.app --watch [secs]  → agent that shows after `secs` idle
-//                                     (default 300) and hides on input; the
+//                                     (default 300) and hides on any input; the
 //                                     real screensaver behaviour. Pair with the
 //                                     sample LaunchAgent in macos/README.md.
 
@@ -34,6 +36,14 @@ func systemIdleSeconds() -> Double {
     return Double(idleNs) / 1_000_000_000.0
 }
 
+/// A borderless window still needs to become key/main, otherwise the hosted
+/// WKWebView never receives keyboard/pointer focus (which is why steering
+/// otherwise required a click first). Default `NSWindow` returns false here.
+final class KeyableWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 /// Owns the per-display overlay windows and the input-driven dismissal.
 final class SaverController {
     private var windows: [NSWindow] = []
@@ -42,8 +52,14 @@ final class SaverController {
     private var shownAt = Date.distantPast
     private(set) var isShowing = false
 
-    /// Called when the user dismisses (input) — quit in immediate mode, hide in
-    /// watch mode.
+    /// Interactive (immediate) mode: launched directly, not as a screensaver.
+    /// Input is passed through to the page — moving the mouse starts the *game*
+    /// instead of dismissing — and only ⌘Q quits. In watch (screensaver) mode
+    /// this is false and any input dismisses.
+    var interactive = false
+
+    /// Called when the user dismisses — quit in immediate mode (⌘Q), hide in
+    /// watch mode (any input).
     var onDismiss: (() -> Void)?
 
     func show() {
@@ -58,10 +74,11 @@ final class SaverController {
             let host = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
             host.wantsLayer = true
             host.layer?.backgroundColor = NSColor.black.cgColor
-            host.addSubview(SaverWebView.make(frame: host.bounds, htmlURL: htmlURL, params: params))
+            let webView = SaverWebView.make(frame: host.bounds, htmlURL: htmlURL, params: params)
+            host.addSubview(webView)
 
-            let win = NSWindow(contentRect: screen.frame, styleMask: [.borderless],
-                               backing: .buffered, defer: false, screen: screen)
+            let win = KeyableWindow(contentRect: screen.frame, styleMask: [.borderless],
+                                    backing: .buffered, defer: false, screen: screen)
             win.setFrame(screen.frame, display: true)
             win.level = .screenSaver
             win.backgroundColor = .black
@@ -71,12 +88,15 @@ final class SaverController {
             win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
             win.contentView = host
             win.orderFrontRegardless()
+            // Interactive: the web view must be first responder so pointer/keys
+            // reach the game immediately, without a click to focus it first.
+            if interactive { win.makeFirstResponder(webView) }
             windows.append(win)
         }
 
         NSApp.activate(ignoringOtherApps: true)
         windows.first?.makeKey()
-        NSCursor.hide()
+        if !interactive { NSCursor.hide() } // interactive: keep the cursor for steering
         shownAt = Date()
         installMonitors()
         isShowing = true
@@ -85,7 +105,7 @@ final class SaverController {
     func hide() {
         guard isShowing else { return }
         removeMonitors()
-        NSCursor.unhide()
+        if !interactive { NSCursor.unhide() }
         for w in windows { w.orderOut(nil) }
         windows.removeAll() // drops the WKWebViews → stops rendering, frees GPU/CPU
         isShowing = false
@@ -104,6 +124,20 @@ final class SaverController {
     }
 
     private func installMonitors() {
+        if interactive {
+            // Let input reach the web page (moving the mouse starts the game).
+            // Only ⌘Q quits — everything else is returned so the WKWebView sees it.
+            localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
+                if event.modifierFlags.contains(.command),
+                   event.charactersIgnoringModifiers?.lowercased() == "q" {
+                    self?.onDismiss?()
+                    return nil
+                }
+                return event
+            }
+            return
+        }
+        // Screensaver mode: any input dismisses.
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: dismissMask) { [weak self] _ in
             self?.dismiss()
             return nil // swallow the dismissing event
@@ -130,6 +164,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let secs = (i + 1 < args.count ? Double(args[i + 1]) : nil) ?? 300
             startWatching(idleFor: secs)
         } else {
+            // Immediate mode: it's a playable window, not a screensaver. Moving
+            // the mouse starts the game (input flows to the page); only ⌘Q quits.
+            controller.interactive = true
             controller.onDismiss = { NSApp.terminate(nil) }
             controller.show()
         }
