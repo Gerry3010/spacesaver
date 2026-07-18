@@ -159,10 +159,31 @@ body.playing #lives { opacity: 1; }
   letter-spacing: 0.5em;
   color: rgba(125, 245, 255, 0.28);
   transition: opacity 0.6s ease;
+  will-change: opacity, transform;
 }
 /* watermark is the idle screensaver's mark; the moment there's activity the
    corner belongs to the control buttons, so it fades out whenever not idle */
 body:not(.idle) #watermark { opacity: 0; }
+/* anti burn-in: while idle (the screensaver mark is up for long stretches),
+   breathe the opacity and drift the mark a few px so no pixel stays fully lit.
+   Very slow + subtle so it reads as "alive", not animated. */
+body.idle #watermark { animation: watermark-drift 19s ease-in-out infinite; }
+@keyframes watermark-drift {
+  0%   { opacity: 0.30; transform: translate(0, 0); }
+  25%  { opacity: 0.16; transform: translate(-3px, -2px); }
+  50%  { opacity: 0.30; transform: translate(2px, -3px); }
+  75%  { opacity: 0.18; transform: translate(3px, 2px); }
+  100% { opacity: 0.30; transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* respect the preference: drop the positional drift, keep only the gentle
+     opacity breathing so there's still some burn-in relief */
+  body.idle #watermark { animation: watermark-breathe 19s ease-in-out infinite; }
+}
+@keyframes watermark-breathe {
+  0%, 100% { opacity: 0.30; }
+  50%      { opacity: 0.16; }
+}
 
 /* ---- follower windows (multi-display) render world only ---- */
 body.follower #hud > *:not(#watermark),
