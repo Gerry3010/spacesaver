@@ -1,4 +1,4 @@
-import { coinFreq, humFreq, humGain } from '../game/audio-math.js';
+import { coinFreq, humFreq, humGain, ambientChord } from '../game/audio-math.js';
 
 // Procedural sound: everything is synthesized live via the Web Audio API — no
 // asset files (repo rule). Short arcade blips for coins/hits/menu, plus a
@@ -14,6 +14,7 @@ class AudioEngine {
     this.ctx = null;
     this.master = null;
     this.hum = null;
+    this.ambient = null;
     this.muted = (typeof localStorage !== 'undefined') && localStorage.getItem(STORE_KEY) === '1';
 
     // Browsers block audio until a user gesture. Arm one-time unlockers; the
@@ -110,12 +111,75 @@ class AudioEngine {
     this._blip({ type: 'square', freq: 660, dur: 0.045, gain: 0.1 });
   }
 
+  // --- ambient space pad: a slow, evolving drone bed under everything ---
+  _startAmbient() {
+    if (this.ambient || !this.ctx) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+
+    const bus = ctx.createGain();
+    bus.gain.setValueAtTime(0.0001, t);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 480;
+    lp.Q.value = 0.5;
+    lp.connect(bus).connect(this.master);
+
+    // open-fifth chord voices, higher ones quieter, gently detuned so they beat
+    const oscs = ambientChord(55).map((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 0 ? 'sine' : 'triangle';
+      o.frequency.value = f;
+      o.detune.value = i % 2 ? 6 : -6;
+      const g = ctx.createGain();
+      g.gain.value = 0.5 / (i + 1);
+      o.connect(g).connect(lp);
+      o.start();
+      return o;
+    });
+
+    // filtered noise "solar wind" — a breath of texture over the drone
+    const noise = ctx.createBufferSource();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noise.buffer = buf;
+    noise.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 220;
+    bp.Q.value = 0.7;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.value = 0.06;
+    noise.connect(bp).connect(noiseGain).connect(bus);
+    noise.start();
+
+    // two slow LFOs: one breathes the whole bed, one sweeps the filter
+    const breathe = ctx.createOscillator();
+    breathe.frequency.value = 0.05;
+    const breatheGain = ctx.createGain();
+    breatheGain.gain.value = 0.03;
+    breathe.connect(breatheGain).connect(bus.gain);
+    breathe.start();
+
+    const sweep = ctx.createOscillator();
+    sweep.frequency.value = 0.033;
+    const sweepGain = ctx.createGain();
+    sweepGain.gain.value = 220;
+    sweep.connect(sweepGain).connect(lp.frequency);
+    sweep.start();
+
+    bus.gain.exponentialRampToValueAtTime(0.075, t + 5); // slow fade-in
+    this.ambient = { bus, lp, oscs, noise, breathe, sweep };
+  }
+
   // --- continuous engine hum, driven from the render loop each frame ---
   setEngine(speed) {
     if (!this._ready()) {
       if (this.hum) this.hum.g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
       return;
     }
+    this._startAmbient(); // lazy-start the ambient bed once audio is live
     if (!this.hum) {
       const osc = this.ctx.createOscillator();
       const lp = this.ctx.createBiquadFilter();

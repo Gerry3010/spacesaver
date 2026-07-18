@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clamp, coinFreq, humFreq, humGain } from '../src/game/audio-math.js';
+import { clamp, coinFreq, humFreq, humGain, ambientChord } from '../src/game/audio-math.js';
 
 test('clamp bounds a value', () => {
   assert.equal(clamp(5, 0, 10), 5);
@@ -37,4 +37,12 @@ test('humFreq stays in a low band and climbs with speed', () => {
   assert.ok(humFreq(0) >= 42);
   assert.ok(humFreq(260) > humFreq(0));
   assert.ok(humFreq(9999) <= 90); // capped
+});
+
+test('ambientChord is an open-fifth stack off the root', () => {
+  assert.deepEqual(ambientChord(55), [55, 82.5, 110, 165]); // root, 5th, 8ve, 12th
+  assert.deepEqual(ambientChord(100), [100, 150, 200, 300]);
+  // all voices are low and ascending (a calm bed, no dissonant third)
+  const c = ambientChord();
+  for (let i = 1; i < c.length; i++) assert.ok(c[i] > c[i - 1]);
 });
