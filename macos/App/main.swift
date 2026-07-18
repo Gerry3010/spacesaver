@@ -50,6 +50,7 @@ final class SaverController {
     private var localMonitor: Any?
     private var globalMonitor: Any?
     private var shownAt = Date.distantPast
+    private var activity: NSObjectProtocol? // defeats App Nap while rendering
     private(set) var isShowing = false
 
     /// Interactive (immediate) mode: launched directly, not as a screensaver.
@@ -67,6 +68,13 @@ final class SaverController {
         guard let htmlURL = SaverWebView.htmlURL(in: .main) else {
             NSLog("[spacesaver] bundled spacesaver.html not found"); return
         }
+
+        // Launched from the background LaunchAgent the process sits in a low QoS
+        // band, so WebGL renders throttled (janky). Raise it while visible —
+        // "…AllowingIdleSystemSleep" keeps App Nap off without blocking sleep.
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiatedAllowingIdleSystemSleep,
+            reason: "SpaceSaver screensaver rendering")
 
         for screen in NSScreen.screens {
             let params = DisplayLayout.params(for: screen, isPreview: false)
@@ -108,6 +116,7 @@ final class SaverController {
         if !interactive { NSCursor.unhide() }
         for w in windows { w.orderOut(nil) }
         windows.removeAll() // drops the WKWebViews → stops rendering, frees GPU/CPU
+        if let a = activity { ProcessInfo.processInfo.endActivity(a); activity = nil }
         isShowing = false
     }
 
