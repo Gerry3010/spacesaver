@@ -91,12 +91,21 @@ Or open `SpaceSaver.xcodeproj` in Xcode and build the **SpaceSaverApp** scheme.
 ## Run modes
 
 ```sh
-open SpaceSaver.app                                    # show now on every display; any input quits
+open -n SpaceSaver.app                                 # play now: game across all displays, ⌘Q quits
 SpaceSaver.app/Contents/MacOS/SpaceSaver --watch 300   # agent: show after 300 s idle, hide on input
 ```
 
-The `--watch` mode is what the LaunchAgent in [Installation](#installation-quick-start)
-runs at login — that's the "real screensaver" setup.
+- **Immediate (playable) mode** — launched with no arguments, it's a **game**:
+  moving the mouse starts Coin Rush across every display (coins/asteroids sync
+  from the primary "master" display; you can steer from any screen). Input flows
+  to the game; only **⌘Q** quits.
+- **`--watch <secs>` (screensaver) mode** — the agent the LaunchAgent in
+  [Installation](#installation-quick-start) runs at login. Shows after N seconds
+  idle, hides on **any** input. This is the "real screensaver" setup.
+
+> Use **`open -n`** for the playable window: with the `--watch` LaunchAgent
+> running, a plain `open SpaceSaver.app` just activates the already-running
+> watcher instead of starting a game instance.
 
 ## Signing
 
