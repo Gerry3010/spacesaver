@@ -2,20 +2,15 @@ import Cocoa
 import WebKit
 import IOKit
 
-// SpaceSaver.app — the standalone "screensaver mode" that actually works across
-// displays on modern macOS. Unlike the `.saver` (which the legacyScreenSaver
-// sandbox renders black and splits into one process per display), this app owns
-// a single process, so WebGL renders and the `BroadcastChannel` sync ties every
-// display into one seamless, in-lockstep world.
+// SpaceSaver.app — a menu-bar app that runs the web space-screensaver across all
+// displays. Unlike the `.saver` (which the legacyScreenSaver sandbox renders
+// black and splits into one process per display), this app owns a single
+// process, so WebGL renders and the `BroadcastChannel` sync ties every display
+// into one seamless, in-lockstep world.
 //
-// Modes:
-//   SpaceSaver.app                 → playable window: shows now, moving the
-//                                     mouse starts the game (input flows to the
-//                                     page), only ⌘Q quits. NOT a screensaver.
-//   SpaceSaver.app --watch [secs]  → agent that shows after `secs` idle
-//                                     (default 300) and hides on any input; the
-//                                     real screensaver behaviour. Pair with the
-//                                     sample LaunchAgent in macos/README.md.
+// It lives in the menu bar: pick the idle delay before the screensaver kicks in
+// (1–30 min), "Jetzt spielen" to drop straight into multi-display Coin Rush, or
+// quit. `--watch [secs]` still works as a headless override for scripting.
 
 /// System-wide idle time via IOHIDSystem — the rock-solid "seconds since the
 /// last keyboard/mouse event", independent of app focus.
@@ -44,6 +39,11 @@ final class KeyableWindow: NSWindow {
     override var canBecomeMain: Bool { true }
 }
 
+enum SaverMode {
+    case screensaver // silent, cursor hidden, ANY input dismisses
+    case game        // audible, cursor shown, input plays; ⌘Q/⌘W dismisses
+}
+
 /// Owns the per-display overlay windows and the input-driven dismissal.
 final class SaverController {
     private var windows: [NSWindow] = []
@@ -53,14 +53,10 @@ final class SaverController {
     private var activity: NSObjectProtocol? // defeats App Nap while rendering
     private(set) var isShowing = false
 
-    /// Interactive (immediate) mode: launched directly, not as a screensaver.
-    /// Input is passed through to the page — moving the mouse starts the *game*
-    /// instead of dismissing — and only ⌘Q quits. In watch (screensaver) mode
-    /// this is false and any input dismisses.
-    var interactive = false
+    var mode: SaverMode = .screensaver
+    private var isGame: Bool { mode == .game }
 
-    /// Called when the user dismisses — quit in immediate mode (⌘Q), hide in
-    /// watch mode (any input).
+    /// Called when the user dismisses — always returns to the menu bar (hide).
     var onDismiss: (() -> Void)?
 
     func show() {
@@ -69,12 +65,12 @@ final class SaverController {
             NSLog("[spacesaver] bundled spacesaver.html not found"); return
         }
 
-        // Launched from the background LaunchAgent the process sits in a low QoS
-        // band, so WebGL renders throttled (janky). Raise it while visible —
-        // "…AllowingIdleSystemSleep" keeps App Nap off without blocking sleep.
+        // The idle-watcher may sit in a low QoS band; raise it while visible so
+        // WebGL renders smoothly. "…AllowingIdleSystemSleep" keeps App Nap off
+        // without blocking system sleep.
         activity = ProcessInfo.processInfo.beginActivity(
             options: .userInitiatedAllowingIdleSystemSleep,
-            reason: "SpaceSaver screensaver rendering")
+            reason: "SpaceSaver rendering")
 
         for screen in NSScreen.screens {
             let params = DisplayLayout.params(for: screen, isPreview: false)
@@ -82,7 +78,8 @@ final class SaverController {
             let host = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
             host.wantsLayer = true
             host.layer?.backgroundColor = NSColor.black.cgColor
-            let webView = SaverWebView.make(frame: host.bounds, htmlURL: htmlURL, params: params)
+            let webView = SaverWebView.make(frame: host.bounds, htmlURL: htmlURL,
+                                            params: params, muted: mode == .screensaver)
             host.addSubview(webView)
 
             let win = KeyableWindow(contentRect: screen.frame, styleMask: [.borderless],
@@ -96,15 +93,15 @@ final class SaverController {
             win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
             win.contentView = host
             win.orderFrontRegardless()
-            // Interactive: the web view must be first responder so pointer/keys
-            // reach the game immediately, without a click to focus it first.
-            if interactive { win.makeFirstResponder(webView) }
+            // Game: the web view must be first responder so pointer/keys reach
+            // the game immediately, without a click to focus it first.
+            if isGame { win.makeFirstResponder(webView) }
             windows.append(win)
         }
 
         NSApp.activate(ignoringOtherApps: true)
         windows.first?.makeKey()
-        if !interactive { NSCursor.hide() } // interactive: keep the cursor for steering
+        if !isGame { NSCursor.hide() } // game: keep the cursor for steering
         shownAt = Date()
         installMonitors()
         isShowing = true
@@ -113,15 +110,15 @@ final class SaverController {
     func hide() {
         guard isShowing else { return }
         removeMonitors()
-        if !interactive { NSCursor.unhide() }
+        if !isGame { NSCursor.unhide() }
         for w in windows { w.orderOut(nil) }
         windows.removeAll() // drops the WKWebViews → stops rendering, frees GPU/CPU
         if let a = activity { ProcessInfo.processInfo.endActivity(a); activity = nil }
         isShowing = false
     }
 
-    // Any real input dismisses — but ignore the brief settle window right after
-    // showing (activation itself can synthesise a mouse-moved event).
+    // Dismiss, but ignore the brief settle window right after showing (activation
+    // itself can synthesise a mouse-moved event).
     private func dismiss() {
         guard isShowing, Date().timeIntervalSince(shownAt) > 0.6 else { return }
         onDismiss?()
@@ -133,13 +130,14 @@ final class SaverController {
     }
 
     private func installMonitors() {
-        if interactive {
-            // Let input reach the web page (moving the mouse starts the game).
-            // Only ⌘Q quits — everything else is returned so the WKWebView sees it.
+        if isGame {
+            // Let input reach the web page (moving the mouse plays the game).
+            // Only ⌘Q / ⌘W exit back to the menu bar — everything else passes
+            // through so the WKWebView sees it.
             localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
                 if event.modifierFlags.contains(.command),
-                   event.charactersIgnoringModifiers?.lowercased() == "q" {
-                    self?.onDismiss?()
+                   let c = event.charactersIgnoringModifiers?.lowercased(), c == "q" || c == "w" {
+                    self?.dismiss()
                     return nil
                 }
                 return event
@@ -162,39 +160,113 @@ final class SaverController {
     }
 }
 
+/// The menu-bar presence: idle-delay picker, "play now", quit, and the watcher.
+final class MenuBarController: NSObject {
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let saver = SaverController()
+    private var timer: Timer?
+
+    private let intervals = [1, 2, 3, 5, 7, 10, 15, 30] // minutes
+    private let key = "idleMinutes"
+    private var idleMinutes: Int {
+        get { let v = UserDefaults.standard.integer(forKey: key); return v == 0 ? 5 : v }
+        set { UserDefaults.standard.set(newValue, forKey: key); rebuildMenu() }
+    }
+
+    /// `--watch <secs>` headless override (no menu interaction needed).
+    init(forcedIdleSeconds: Double? = nil) {
+        super.init()
+        if let btn = statusItem.button {
+            btn.image = NSImage(systemSymbolName: "moon.stars.fill", accessibilityDescription: "SpaceSaver")
+            btn.image?.isTemplate = true
+        }
+        if let secs = forcedIdleSeconds {
+            UserDefaults.standard.set(max(1, Int(secs / 60)), forKey: key)
+        }
+        saver.onDismiss = { [weak self] in self?.saver.hide() }
+        rebuildMenu()
+        startWatching()
+    }
+
+    private func rebuildMenu() {
+        let menu = NSMenu()
+
+        let play = NSMenuItem(title: "Jetzt spielen", action: #selector(playNow), keyEquivalent: "")
+        play.target = self
+        play.toolTip = "Coin Rush über alle Displays — ⌘Q beendet das Spiel"
+        menu.addItem(play)
+
+        let preview = NSMenuItem(title: "Bildschirmschoner testen", action: #selector(showNow), keyEquivalent: "")
+        preview.target = self
+        menu.addItem(preview)
+
+        menu.addItem(.separator())
+
+        let header = NSMenuItem(title: "Aktiviert nach", action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        for m in intervals {
+            let it = NSMenuItem(title: "\(m) Minuten", action: #selector(pickInterval(_:)), keyEquivalent: "")
+            it.target = self
+            it.tag = m
+            it.state = (m == idleMinutes) ? .on : .off
+            sub.addItem(it)
+        }
+        header.submenu = sub
+        menu.addItem(header)
+
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(title: "SpaceSaver beenden", action: #selector(quit), keyEquivalent: "")
+        quit.target = self
+        menu.addItem(quit)
+
+        statusItem.menu = menu
+    }
+
+    @objc private func playNow() {
+        guard !saver.isShowing else { return }
+        saver.mode = .game
+        saver.show()
+    }
+
+    @objc private func showNow() {
+        guard !saver.isShowing else { return }
+        saver.mode = .screensaver
+        saver.show()
+    }
+
+    @objc private func pickInterval(_ sender: NSMenuItem) { idleMinutes = sender.tag }
+
+    @objc private func quit() { NSApp.terminate(nil) }
+
+    private func startWatching() {
+        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self, !self.saver.isShowing else { return }
+            if systemIdleSeconds() >= Double(self.idleMinutes * 60) {
+                self.saver.mode = .screensaver
+                self.saver.show()
+            }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let controller = SaverController()
-    private var watchTimer: Timer?
-    private var idleThreshold: Double?
+    private var menuBar: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let args = CommandLine.arguments
+        var forced: Double?
         if let i = args.firstIndex(of: "--watch") {
-            let secs = (i + 1 < args.count ? Double(args[i + 1]) : nil) ?? 300
-            startWatching(idleFor: secs)
-        } else {
-            // Immediate mode: it's a playable window, not a screensaver. Moving
-            // the mouse starts the game (input flows to the page); only ⌘Q quits.
-            controller.interactive = true
-            controller.onDismiss = { NSApp.terminate(nil) }
-            controller.show()
+            forced = (i + 1 < args.count ? Double(args[i + 1]) : nil) ?? 300
         }
-    }
-
-    private func startWatching(idleFor threshold: Double) {
-        idleThreshold = threshold
-        controller.onDismiss = { [weak self] in self?.controller.hide() }
-        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self, let th = self.idleThreshold, !self.controller.isShowing else { return }
-            if systemIdleSeconds() >= th { self.controller.show() }
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        watchTimer = timer
+        menuBar = MenuBarController(forcedIdleSeconds: forced)
     }
 }
 
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
-app.setActivationPolicy(.accessory) // agent app: no Dock icon, no menu bar
+app.setActivationPolicy(.accessory) // menu-bar app: no Dock icon
 app.run()
