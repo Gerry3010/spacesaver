@@ -1,4 +1,6 @@
-FROM node:24-alpine
+# Exact tag: Node >= 24.22.1 no longer trusts the emSign ECC Root CA - G3 (eMudhra, 2026-10).
+# Outbound TLS (Cloudflare Turnstile) uses Node's bundled CA store.
+FROM node:24.22.1-alpine3.24
 WORKDIR /app
 COPY server/ ./server/
 VOLUME /data

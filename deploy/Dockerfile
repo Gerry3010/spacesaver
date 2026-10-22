@@ -1,5 +1,6 @@
 # Two-stage: build the bundle, then serve statically with nginx.
-FROM node:24-alpine AS build
+# Exact tag: Node >= 24.22.1 no longer trusts the emSign ECC Root CA - G3 (eMudhra, 2026-10).
+FROM node:24.22.1-alpine3.24 AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
