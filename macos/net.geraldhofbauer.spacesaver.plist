@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Sample LaunchAgent: run SpaceSaver.app as an idle-watcher at login, so it
-  behaves like a real screensaver (shows after N seconds idle, hides on input).
+  Sample LaunchAgent: launch SpaceSaver.app at login so it sits in the menu bar
+  as the idle-watcher. Pick the idle delay from its menu-bar icon (1–30 min) —
+  the choice persists, no need to edit this file.
 
   Install:
     1. Copy SpaceSaver.app to /Applications (or ~/Applications and fix the path).
@@ -10,8 +11,6 @@
     3. launchctl load ~/Library/LaunchAgents/net.geraldhofbauer.spacesaver.plist
   Uninstall:
     launchctl unload ~/Library/LaunchAgents/net.geraldhofbauer.spacesaver.plist
-
-  Adjust the "300" below to the idle delay in seconds you want.
 -->
 <plist version="1.0">
 <dict>
@@ -20,8 +19,6 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/Applications/SpaceSaver.app/Contents/MacOS/SpaceSaver</string>
-		<string>--watch</string>
-		<string>300</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

@@ -16,7 +16,10 @@ enum SaverWebView {
         bundle.url(forResource: "spacesaver", withExtension: "html")
     }
 
-    static func make(frame: CGRect, htmlURL: URL, params: DisplayLayout.Params?) -> WKWebView {
+    /// - Parameter muted: force the page's audio muted. True for the screensaver
+    ///   (must be silent); false for the playable game, so the procedural ambient
+    ///   pad + SFX play (Web Audio still needs the gesture the game supplies).
+    static func make(frame: CGRect, htmlURL: URL, params: DisplayLayout.Params?, muted: Bool = true) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.processPool = processPool
         config.suppressesIncrementalRendering = false
@@ -28,7 +31,7 @@ enum SaverWebView {
         config.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
 
         let controller = WKUserContentController()
-        controller.addUserScript(WKUserScript(source: bootstrapJS,
+        controller.addUserScript(WKUserScript(source: bootstrapJS(muted: muted),
                                               injectionTime: .atDocumentStart,
                                               forMainFrameOnly: true))
         config.userContentController = controller
@@ -44,31 +47,33 @@ enum SaverWebView {
     }
 
     /// Runs before the page's own scripts. Two defensive jobs:
-    /// 1. Force audio muted — a screensaver must be silent. (Audio also needs a
-    ///    user gesture the saver never gets, so this is belt-and-suspenders.)
-    /// 2. Give `localStorage` an in-memory fallback if the file:// origin denies
+    /// 1. Give `localStorage` an in-memory fallback if the file:// origin denies
     ///    it, so the page can never crash reading/writing storage.
-    static let bootstrapJS = """
-    (function () {
-      try {
-        var t = '__ss_probe__';
-        window.localStorage.setItem(t, '1');
-        window.localStorage.removeItem(t);
-      } catch (e) {
-        var mem = {};
-        Object.defineProperty(window, 'localStorage', {
-          configurable: true,
-          value: {
-            getItem: function (k) { return k in mem ? mem[k] : null; },
-            setItem: function (k, v) { mem[k] = String(v); },
-            removeItem: function (k) { delete mem[k]; },
-            clear: function () { mem = {}; },
-            key: function (i) { return Object.keys(mem)[i] || null; },
-            get length() { return Object.keys(mem).length; }
+    /// 2. When `muted`, force the page's audio off (screensaver must be silent).
+    static func bootstrapJS(muted: Bool) -> String {
+        let muteLine = muted ? "try { window.localStorage.setItem('spacesaver.muted', '1'); } catch (e) {}" : ""
+        return """
+        (function () {
+          try {
+            var t = '__ss_probe__';
+            window.localStorage.setItem(t, '1');
+            window.localStorage.removeItem(t);
+          } catch (e) {
+            var mem = {};
+            Object.defineProperty(window, 'localStorage', {
+              configurable: true,
+              value: {
+                getItem: function (k) { return k in mem ? mem[k] : null; },
+                setItem: function (k, v) { mem[k] = String(v); },
+                removeItem: function (k) { delete mem[k]; },
+                clear: function () { mem = {}; },
+                key: function (i) { return Object.keys(mem)[i] || null; },
+                get length() { return Object.keys(mem).length; }
+              }
+            });
           }
-        });
-      }
-      try { window.localStorage.setItem('spacesaver.muted', '1'); } catch (e) {}
-    })();
-    """
+          \(muteLine)
+        })();
+        """
+    }
 }

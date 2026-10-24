@@ -16,8 +16,8 @@ There are **two targets** in `SpaceSaver.xcodeproj`:
 
 ## Installation (quick start)
 
-Turn `SpaceSaver.app` into a real screensaver (shows after N minutes idle across
-every display, hides on any input). Run from the repo root:
+`SpaceSaver.app` runs in the **menu bar**: pick the idle delay before the
+screensaver kicks in, drop into the game, or quit. Run from the repo root:
 
 ```sh
 # 1. Build the app (needs Xcode + Node)
@@ -27,13 +27,22 @@ xcodebuild -project macos/SpaceSaver.xcodeproj -scheme SpaceSaverApp \
 # 2. Install it
 cp -R macos/build/Build/Products/Release/SpaceSaver.app /Applications/
 
-# 3. Install the idle-watcher LaunchAgent (starts at login, runs in the background)
+# 3. Launch it at login (LaunchAgent) so it's always in the menu bar
 cp macos/net.geraldhofbauer.spacesaver.plist ~/Library/LaunchAgents/
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/net.geraldhofbauer.spacesaver.plist
 ```
 
-The idle delay is the last argument in the plist (`--watch 300` = 5 minutes) —
-edit it and re-`bootstrap` to change it. Uninstall the watcher with:
+From the menu-bar icon (a moon) you can:
+
+- **Aktiviert nach** → pick the idle delay: **1, 2, 3, 5, 7, 10, 15, 30 min**
+  (persists in `UserDefaults`; default 5).
+- **Jetzt spielen** → multi-display Coin Rush right now, with sound. Steer with
+  the mouse; **⌘Q** (or ⌘W) exits back to the menu bar.
+- **Bildschirmschoner testen** → show the screensaver immediately.
+- **SpaceSaver beenden** → quit.
+
+The screensaver shows after the chosen idle time across every display and hides
+on any input. Uninstall the login item with:
 
 ```sh
 launchctl bootout gui/$(id -u)/net.geraldhofbauer.spacesaver
@@ -41,16 +50,13 @@ launchctl bootout gui/$(id -u)/net.geraldhofbauer.spacesaver
 
 **Heads-up — avoid overlap with the macOS screensaver.** The app is *not* the
 system screensaver, so macOS's own screensaver (System Settings → Screen Saver)
-will still trigger at its own idle time and draw on top. Either set the app's
-`--watch` delay shorter than the system one (so you normally see SpaceSaver), or
-set the macOS screensaver to **Never** so SpaceSaver is the only one. And don't
-select the experimental `SpaceSaver.saver` there — it renders black (see below).
+will still trigger at its own idle time and draw on top. Either set SpaceSaver's
+delay shorter than the system one, or set the macOS screensaver to **Never** so
+SpaceSaver is the only one. And don't select the experimental `SpaceSaver.saver`
+there — it renders black (see below).
 
-To just try it once without installing anything:
-
-```sh
-open /Applications/SpaceSaver.app     # or the built .app — shows now; any input quits
-```
+`--watch <secs>` is still accepted as a headless override for scripting (seeds
+the idle delay); normal use is the menu.
 
 ## Why the standalone app (and not just a `.saver`)
 
@@ -88,24 +94,18 @@ xcodebuild -project SpaceSaver.xcodeproj -scheme SpaceSaverApp -configuration Re
 
 Or open `SpaceSaver.xcodeproj` in Xcode and build the **SpaceSaverApp** scheme.
 
-## Run modes
+## Modes
 
-```sh
-open -n SpaceSaver.app                                 # play now: game across all displays, ⌘Q quits
-SpaceSaver.app/Contents/MacOS/SpaceSaver --watch 300   # agent: show after 300 s idle, hide on input
-```
+The app lives in the menu bar (see [Installation](#installation-quick-start)):
 
-- **Immediate (playable) mode** — launched with no arguments, it's a **game**:
-  moving the mouse starts Coin Rush across every display (coins/asteroids sync
-  from the primary "master" display; you can steer from any screen). Input flows
-  to the game; only **⌘Q** quits.
-- **`--watch <secs>` (screensaver) mode** — the agent the LaunchAgent in
-  [Installation](#installation-quick-start) runs at login. Shows after N seconds
-  idle, hides on **any** input. This is the "real screensaver" setup.
+- **Screensaver** — shows after the chosen idle delay across every display,
+  silent, hides on any input.
+- **Game (Jetzt spielen)** — multi-display Coin Rush with sound. Coins/asteroids
+  sync from the primary "master" display and you can steer from any screen;
+  input flows to the game, **⌘Q** exits back to the menu bar.
 
-> Use **`open -n`** for the playable window: with the `--watch` LaunchAgent
-> running, a plain `open SpaceSaver.app` just activates the already-running
-> watcher instead of starting a game instance.
+`--watch <secs>` is accepted as a headless override (seeds the idle delay) for
+scripting; normal use is the menu.
 
 ## Signing
 
